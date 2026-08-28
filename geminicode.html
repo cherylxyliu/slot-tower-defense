@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>九宫防线</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#0f172a;font-family:"PingFang SC","Microsoft YaHei",sans-serif;color:#e2e8f0;user-select:none;touch-action:manipulation}
+#app{max-width:480px;height:100dvh;margin:0 auto;display:flex;flex-direction:column;position:relative;background:#0f172a;min-height:100dvh}
+.screen{display:none;flex-direction:column;height:100%}.screen.active{display:flex}
+/* ===== 标题屏 ===== */
+#screen-title{align-items:center;justify-content:center;gap:28px;background:radial-gradient(ellipse at 50% 30%,#1e293b 0%,#0f172a 70%)}
+#screen-title h1{font-size:42px;color:#f59e0b;text-shadow:0 0 20px rgba(245,158,11,.4);letter-spacing:6px}
+#screen-title .sub{color:#94a3b8;font-size:14px;letter-spacing:2px}
+.btn{border:none;border-radius:10px;padding:14px 40px;font-size:18px;font-weight:bold;cursor:pointer;font-family:inherit;transition:transform .1s}
+.btn:active{transform:scale(.95)}
+.btn-primary{background:#f59e0b;color:#fff}
+.btn-secondary{background:#334155;color:#e2e8f0;border:1px solid #475569}
+.btn-shop{background:#10b981;color:#fff;border:1px solid #059669}
+.speed-active{background:#f59e0b !important;color:#fff !important;border-color:#f59e0b !important}
+.btn-danger{background:#ef4444;color:#fff}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px}
+.btn:disabled{background:#475569;color:#94a3b8;cursor:not-allowed}
+/* ===== 说明屏 ===== */
+#screen-help{padding:20px;overflow-y:auto;gap:14px}
+#screen-help h2{color:#f59e0b;text-align:center;font-size:22px}
+.help-card{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:14px;font-size:13px;line-height:1.7}
+.help-card b{color:#38bdf8}
+/* ===== 主界面 ===== */
+#screen-game{gap:0;min-height:0}
+#battlefield{flex:1 1 auto;min-height:180px;max-height:55vh;position:relative;overflow:hidden;background:linear-gradient(180deg,#1a2537 0%,#0f172a 100%);border-bottom:2px solid #334155}
+.enemy{position:absolute;font-size:24px;transform:translate(-50%,-50%);transition:filter .2s;z-index:5}
+.enemy.boss{font-size:44px}
+.enemy.frozen{filter:hue-rotate(180deg) brightness(1.6)}
+.enemy.phased{opacity:.25}
+.enemy.shielded::after{content:'🛡️';position:absolute;top:-14px;right:-14px;font-size:14px}
+.bullet{position:absolute;width:6px;height:12px;background:#f59e0b;border-radius:3px;transform:translate(-50%,-50%);z-index:6}
+.bullet.fire{background:#ef4444;width:10px;height:10px;border-radius:50%;box-shadow:0 0 8px #ef4444}
+.bullet.water{background:#38bdf8;border-radius:50%}
+.fx-line{position:absolute;background:linear-gradient(90deg,transparent,#38bdf8,transparent);height:3px;z-index:7;pointer-events:none}
+.fx-beam{position:absolute;width:10px;background:linear-gradient(180deg,rgba(56,189,248,.8),rgba(56,189,248,.2));z-index:7;pointer-events:none;border-radius:5px;box-shadow:0 0 12px #38bdf8}
+.fx-boom{position:absolute;font-size:28px;transform:translate(-50%,-50%);z-index:8;pointer-events:none}
+#boss-bar-wrap{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:72%;z-index:10}
+#boss-bar{height:10px;background:#334155;border-radius:5px;border:1px solid #475569;overflow:hidden}
+#boss-bar-fill{height:100%;background:#ef4444;width:0%;transition:width .3s}
+#boss-bar-text{font-size:10px;color:#94a3b8;text-align:center;margin-top:2px}
+#wave-banner{position:absolute;top:35%;left:50%;transform:translateX(-50%);font-size:24px;font-weight:bold;color:#f59e0b;text-shadow:0 0 10px rgba(0,0,0,.8);z-index:20;pointer-events:none;opacity:0;transition:opacity .4s;white-space:nowrap}
+#log-box{position:absolute;bottom:4px;left:8px;right:8px;font-size:10px;color:#94a3b8;pointer-events:none;z-index:9;max-height:56px;overflow:hidden}
+#log-box div{margin-bottom:1px;text-shadow:0 1px 2px #000}
+/* ===== HUD ===== */
+#hud{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#1e293b;border-bottom:1px solid #334155;font-size:13px;flex-wrap:wrap;gap:4px}
+#hud .res{display:flex;gap:10px}
+#hud .hp{color:#ef4444;font-weight:bold}
+#hud .copper{color:#f59e0b;font-weight:bold}
+#hud .gold{color:#fbbf24;font-weight:bold}
+#hud .wave-info{color:#38bdf8;font-weight:bold}
+/* ===== 九宫格 ===== */
+#grid-area{padding:8px 12px 4px;background:#1e293b;flex:0 0 auto}
+#grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:300px;margin:0 auto}
+/* 建筑说明 tip */
+#building-tip{display:none;background:#0f172a;border:1px solid #475569;border-radius:8px;padding:8px 10px;margin:0 12px 6px;font-size:12px;color:#cbd5e1;line-height:1.5}
+#building-tip.show{display:block}
+#building-tip .tip-head{display:flex;align-items:center;gap:8px;font-weight:bold;color:#38bdf8;margin-bottom:4px}
+#building-tip .tip-head .tip-icon{font-size:20px}
+#building-tip .tip-close{margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px}
+#building-tip .tip-row{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#94a3b8}
+#building-tip .tip-row b{color:#e2e8f0}
+#building-tip .tip-special{color:#fbbf24;font-size:11px;margin-top:2px}
+#building-tip .tip-bonus{color:#22c55e;font-size:10px;margin-top:2px;line-height:1.5}
+#building-tip .tip-recipe{color:#10b981;font-size:11px;margin-top:2px}
+.cell{aspect-ratio:1;background:#0f172a;border:2px dashed #475569;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:32px;position:relative;cursor:grab;touch-action:none;transition:border-color .15s,background .15s}
+.cell.occupied{border-style:solid;border-color:#38bdf8;background:#1e1e2d}
+.cell.drag-target{border-color:#10b981;background:rgba(16,185,129,.15)}
+.cell.synth-consume{border-color:#ef4444;background:rgba(239,68,68,.25);animation:consumePulse .3s 3}
+.cell.synth-produce{border-color:#f59e0b;background:rgba(245,158,11,.3);animation:synthPop .6s}
+.cell.synth-highlight,.res-item.synth-highlight{border-color:#facc15!important;background:rgba(250,204,21,.2)!important;box-shadow:0 0 12px rgba(250,204,21,.5);animation:synthHighlight 1.2s infinite}
+@keyframes consumePulse{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes synthHighlight{0%,100%{box-shadow:0 0 8px rgba(250,204,21,.3)}50%{box-shadow:0 0 18px rgba(250,204,21,.7)}}
+.cell .stars{position:absolute;bottom:2px;display:flex;gap:1px}
+.cell .stars span{font-size:8px;color:#64748b}.cell .stars span.on{color:#ef4444}
+.cell .tier-tag{position:absolute;top:2px;left:4px;font-size:8px;color:#64748b}
+/* ===== 底部面板 ===== */
+#bottom-panel{flex:0 0 auto;background:#1e293b;padding:6px 12px 10px;display:flex;flex-direction:column;gap:6px;overflow:visible}
+#panel-label{font-size:11px;color:#94a3b8;letter-spacing:1px}
+#reserve{display:flex;gap:6px;overflow-x:auto;padding:4px 0;min-height:64px;align-items:center}
+.res-item{min-width:52px;height:60px;background:#0f172a;border:1px solid #475569;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:24px;cursor:grab;touch-action:none;position:relative;flex-shrink:0}
+.res-item .stars{position:absolute;bottom:1px;display:flex;gap:0}
+.res-item .stars span{font-size:7px;color:#64748b}.res-item .stars span.on{color:#ef4444}
+.res-empty{color:#475569;font-size:12px;padding:0 12px}
+#skillbar{display:flex;gap:8px;flex-wrap:wrap}
+.skill-btn{width:56px;height:56px;background:#334155;border:2px solid #475569;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:22px;cursor:pointer;position:relative;touch-action:manipulation}
+.skill-btn:active{transform:scale(.93)}
+.skill-btn .cnt{position:absolute;bottom:-4px;right:-4px;background:#ef4444;color:#fff;font-size:10px;padding:1px 5px;border-radius:8px;font-weight:bold}
+.skill-btn:disabled{opacity:.35}
+#action-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+#wave-progress{display:flex;align-items:center;justify-content:center;padding:6px 2px 10px;gap:0}
+.wp-node{position:relative;width:20px;height:20px;border-radius:50%;background:#1e293b;border:2px solid #475569;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#cbd5e1;flex-shrink:0}
+.wp-node .wp-num{position:absolute;bottom:-13px;font-size:9px;color:#64748b;font-weight:normal}
+.wp-node.invest{border-color:#f59e0b;background:rgba(245,158,11,.22);font-size:12px;color:#fcd34d}
+.wp-node.boss{border-color:#ef4444;background:rgba(239,68,68,.22);font-size:12px;color:#fca5a5}
+.wp-node.elite{border-color:#a855f7;background:rgba(168,85,247,.22);font-size:12px;color:#d8b4fe}
+.wp-node.resource{border-color:#22c55e;background:rgba(34,197,94,.22);font-size:12px;color:#86efac}
+.wp-node.done{background:#334155;color:#94a3b8}
+.wp-node.current{border-color:#38bdf8;background:#0c4a6e;color:#e0f2fe;box-shadow:0 0 8px rgba(56,189,248,.7)}
+.wp-line{flex:1;height:2px;background:#334155;max-width:16px;min-width:4px}
+.wp-line.done{background:#38bdf8}
+/* ===== 通用弹窗 ===== */
+.modal{display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.85);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px}
+.modal.active{display:flex}
+.modal-box{background:#1e293b;border:1px solid #475569;border-radius:14px;padding:18px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;position:relative}
+.modal-box h3{color:#f59e0b;font-size:17px;margin-bottom:12px;text-align:center}
+.modal-close{position:absolute;top:8px;right:8px;background:#ef4444;color:#fff;border:none;width:26px;height:26px;border-radius:50%;font-weight:bold;cursor:pointer;font-size:14px}
+/* ===== 老虎机 ===== */
+#slot-grid{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,64px);gap:6px;margin:12px auto;position:relative;justify-content:center}
+.slot-cell{background:#0f172a;border:2px solid #334155;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:30px;position:relative;transition:border-color .2s}
+.slot-cell.win{border-color:#f59e0b;background:#78350f;animation:pulse .6s infinite alternate}
+.slot-cell.swap-target{border-color:#38bdf8;cursor:pointer}
+.slot-cell.locked::after{content:'🔒';position:absolute;top:2px;left:4px;font-size:10px}
+.slot-cell.lock-pick{cursor:crosshair;border-color:#f59e0b;background:rgba(245,158,11,.15)}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.06)}}
+.slot-col-btn{position:absolute;top:-30px;width:64px;text-align:center}
+.col-nudge-btn{background:linear-gradient(180deg,#475569,#334155);color:#38bdf8;border:1px solid #64748b;border-radius:6px;padding:3px 0;font-size:14px;cursor:pointer;width:64px;display:block}
+.col-nudge-btn:hover:not(:disabled){background:linear-gradient(180deg,#38bdf8,#1e40af);color:#fff}
+.col-nudge-btn:disabled{opacity:.3;cursor:not-allowed}
+.col-nudge-btn .col-tag{display:block;font-size:8px;color:#94a3b8;margin-top:1px}
+#nudge-row{display:grid;grid-template-columns:repeat(3,64px);gap:6px;justify-content:center;margin:4px auto 2px}
+#ability-panel{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:8px 10px;margin-top:10px;font-size:11px;color:#94a3b8}
+#ability-panel b{color:#38bdf8;display:block;margin-bottom:4px}
+#ability-list{display:flex;flex-wrap:wrap;gap:4px}
+#ability-list .ab{background:#1e293b;border:1px solid #475569;border-radius:12px;padding:2px 8px;color:#10b981;font-size:10px}
+#ability-list .ab.dir-fire{border-color:#ef4444;color:#fbbf24}
+#ability-list .ab.dir-water{border-color:#38bdf8;color:#7dd3fc}
+#ability-list .ab.dir-economy{border-color:#10b981;color:#34d399}
+#slot-hud{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+#slot-hud .cost{color:#f59e0b}
+#slot-result-text{font-size:12px;color:#10b981;min-height:18px;text-align:center;margin:6px 0;font-weight:bold}
+#hidden-preview{display:flex;justify-content:center;gap:24px;font-size:16px;color:#64748b;min-height:20px;margin-bottom:4px}
+.slot-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+#prob-panel{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:8px;font-size:10px;color:#94a3b8;margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}
+/* 定向目标选择 */
+#target-row{display:flex;align-items:center;gap:8px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:6px 10px;margin-top:8px;font-size:12px;color:#94a3b8}
+#target-row b{color:#38bdf8}
+#target-row .tgt-icon{font-size:18px;cursor:pointer}
+#target-row .tgt-icon.selected{border:2px solid #f59e0b;border-radius:6px;background:#78350f}
+#modal-target .modal-box h3{color:#38bdf8}
+#target-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0}
+#target-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0}
+#target-grid .tg-cell{background:#0f172a;border:2px solid #334155;border-radius:10px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;font-size:24px;cursor:pointer;transition:border-color .15s}
+#target-grid .tg-cell .tg-nm{font-size:9px;color:#94a3b8;margin-top:2px}
+#target-grid .tg-cell .tg-meta{font-size:8px;color:#64748b;margin-top:1px}
+#target-grid .tg-cell .tg-recipe{font-size:10px;margin-top:2px}
+#target-grid .tg-cell .tg-recipe.fire{color:#fbbf24}
+#target-grid .tg-cell .tg-recipe.water{color:#7dd3fc}
+#target-grid .tg-cell.selected{border-color:#f59e0b;background:#78350f}
+#target-grid .tg-cell.selected .tg-nm{color:#fbbf24}
+/* ===== 商店 ===== */
+.shop-item{display:flex;align-items:center;gap:10px;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px;margin-bottom:8px}
+.shop-item .icon{font-size:28px}
+.shop-item .info{flex:1}
+.shop-item .info .nm{font-size:14px;font-weight:bold}
+.shop-item .info .ds{font-size:11px;color:#94a3b8}
+.shop-item .price{color:#fbbf24;font-size:13px;font-weight:bold}
+/* ===== 投资 ===== */
+.invest-card{background:#0f172a;border:2px solid #334155;border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.invest-card:active{border-color:#f59e0b}
+.invest-card .nm{font-size:14px;font-weight:bold;color:#38bdf8}
+.invest-card .ds{font-size:12px;color:#94a3b8;margin-top:4px}
+.invest-card .rar{font-size:10px;margin-top:4px}
+.rar-common{color:#94a3b8}.rar-uncommon{color:#10b981}.rar-epic{color:#a78bfa}
+/* ===== 合成 ===== */
+.synth-recipe{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:12px;margin-bottom:8px}
+.synth-recipe.ok{border-color:#10b981}
+.synth-recipe.conflict{border-color:#ef4444}
+.synth-recipe .formula{font-size:15px;font-weight:bold;text-align:center;padding:6px}
+.synth-recipe .mat-list{font-size:11px;color:#94a3b8;text-align:center}
+.synth-recipe .mat-list .from-board{color:#f59e0b}
+.synth-check{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px}
+.synth-check input{width:18px;height:18px;accent-color:#10b981}
+.synth-anim{position:fixed;inset:0;z-index:200;background:rgba(15,23,42,.9);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.synth-anim.active{display:flex}
+.synth-anim .big{font-size:56px;animation:synthPop .5s}
+.synth-anim .txt{font-size:16px;color:#f59e0b;font-weight:bold}
+@keyframes synthPop{0%{transform:scale(0) rotate(-180deg)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
+/* ===== 结算 ===== */
+#screen-settle{align-items:center;justify-content:center;gap:16px;padding:20px;text-align:center}
+#settle-title{font-size:32px;font-weight:bold}
+#settle-title.win{color:#10b981}#settle-title.lose{color:#ef4444}
+.settle-stats{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:14px;font-size:13px;line-height:2;width:100%;max-width:360px}
+#settle-grid{display:grid;grid-template-columns:repeat(3,48px);gap:4px;margin:8px auto}
+#settle-grid .sc{width:48px;height:48px;background:#0f172a;border:1px solid #334155;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:22px}
+#settle-invest{font-size:11px;color:#94a3b8;max-width:320px}
+/* ===== Toast ===== */
+#toast{position:fixed;top:12%;left:50%;transform:translateX(-50%);background:rgba(30,41,59,.95);border:1px solid #f59e0b;color:#e2e8f0;padding:10px 20px;border-radius:10px;font-size:14px;z-index:300;opacity:0;transition:opacity .25s;pointer-events:none;max-width:88%;text-align:center}
+#toast.show{opacity:1}
+/* ===== 拖拽幽灵 ===== */
+#drag-ghost{position:fixed;z-index:400;pointer-events:none;font-size:34px;filter:drop-shadow(0 0 6px #38bdf8);display:none;transform:translate(-50%,-50%)}
+/* ===== 竖屏提示 ===== */
+#rotate-tip{display:none;position:fixed;inset:0;z-index:999;background:#0f172a;color:#94a3b8;align-items:center;justify-content:center;font-size:20px;flex-direction:column;gap:12px}
+@media (orientation:landscape) and (max-height:500px){#rotate-tip{display:flex}}
+/* ===== 合成阶段面板（非阻塞） ===== */
+#synth-panel{display:none;position:fixed;left:0;right:0;bottom:0;z-index:90;background:#1e293b;border-top:2px solid #f59e0b;border-radius:14px 14px 0 0;padding:10px 12px 12px;max-height:46vh;overflow-y:auto;box-shadow:0 -4px 16px rgba(0,0,0,.45)}
+#synth-panel.collapsed .synth-panel-body,#synth-panel.collapsed .synth-actions{display:none}
+.synth-panel-head{display:flex;align-items:center;justify-content:space-between;color:#f59e0b;font-weight:bold;font-size:14px;margin-bottom:6px}
+.synth-collapse{background:#334155;color:#cbd5e1;border:none;border-radius:8px;padding:2px 8px;font-size:11px;cursor:pointer}
+#synth-hint{font-size:11px;color:#94a3b8;margin-bottom:6px;line-height:1.4}
+#synth-list{display:flex;flex-direction:column;gap:6px}
+.synth-empty{font-size:12px;color:#94a3b8;padding:6px 2px}
+.synth-recipe.ok{background:#0f172a;border:1px solid #334155}
+.synth-actions{display:flex;gap:8px;margin-top:8px}
+.synth-actions .btn{flex:1}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 标题屏 -->
+  <div id="screen-title" class="screen active">
+    <h1>九宫防线</h1>
+    <div class="sub">转动命运 · 守住防线</div>
+    <button class="btn btn-primary" id="btn-start">开始游戏</button>
+    <button class="btn btn-secondary" id="btn-help">玩法说明</button>
+  </div>
+
+  <!-- 玩法说明屏 -->
+  <div id="screen-help" class="screen">
+    <h2>玩法说明</h2>
+    <div class="help-card"><b>🎯 目标</b>：转老虎机获得建筑，摆进 3×3 九宫格抵挡 9 波敌潮。击败第 9 波 Boss 即胜利；基地生命归零则失败。</div>
+    <div class="help-card"><b>💰 双货币</b>：<b>铜钱</b>只能转老虎机（每次消耗递增：10→20→40→80→160，每波重置）；<b>金币</b>在商店买技能或刷新老虎机投资选项。</div>
+    <div class="help-card"><b>🎰 老虎机</b>：3×3 滚轴 8 条线，三个相同图标连成一线即中奖，每条线独立发建筑。每波可<b>列下移</b> 1 次（选一列下移，新图标从顶部进入，可能组成新中奖线！）。连续 2 次未中奖触发保底。</div>
+    <div class="help-card"><b>⬆️ 同类升星</b>：把同名建筑拖到一起，星级相加+1（上限5星）。星级越高伤害越高。</div>
+    <div class="help-card"><b>🧬 异类合成</b>：短弓+火盆→重型火箭塔；水炮塔+静电线圈→雷暴降临塔。进入备战阶段若场上有可合成配方，点「🧬 合成」进入合成期，<b>拖动两种配方建筑到一起</b>即可合成。<b>不消耗材料</b>：参与合成的高阶建筑会自动"重置"为0星，并按其星级返还等量0星件（例：3星短弓+2星火盆→0星火箭塔 + 3个0星短弓 + 2个0星火盆），返还件可继续升星或二次合成。</div>
+    <div class="help-card"><b>📐 位置策略</b>：建筑上下左右相邻会触发增益——火盆让相邻短弓火箭化×2、铁匠铺让相邻塔攻速+30%、魔力棱镜让相邻单体塔伤害+20%且多打1目标、储能水槽让相邻雷水流建筑伤害提升。摆对位置是关键！</div>
+    <div class="help-card"><b>Machine 升级</b>：第 2/4/6/8 波结束后可三选一强化老虎机本体（聚财/定向/爆发三方向），让抽取越来越强。</div>
+    <div class="help-card"><b>❄️ 技能</b>：战斗中点击技能栏释放。技能在商店用金币购买，是阵容短板的救场手段。</div>
+    <button class="btn btn-primary" id="btn-help-back" style="margin-top:8px">返回标题</button>
+  </div>
+
+  <!-- 主界面 -->
+  <div id="screen-game" class="screen">
+    <div id="battlefield">
+      <div id="boss-bar-wrap"><div id="boss-bar"><div id="boss-bar-fill"></div></div><div id="boss-bar-text">Boss降临进度</div></div>
+      <div id="wave-banner"></div>
+      <div id="log-box"></div>
+    </div>
+    <div id="hud">
+      <span class="wave-info" id="hud-wave">第 1/9 波</span>
+      <span class="hp" id="hud-hp">❤️ 10</span>
+      <div class="res"><span class="copper" id="hud-copper">💰 40</span><span class="gold" id="hud-gold">🪙 0</span></div>
+    </div>
+    <div id="grid-area"><div id="grid"></div></div>
+    <div id="building-tip"></div>
+    <div id="bottom-panel">
+      <div id="panel-label">备用建筑（不上阵，可拖入九宫格）</div>
+      <div id="reserve"></div>
+      <div id="skillbar" style="display:none"></div>
+      <div id="action-row">
+        <button class="btn btn-primary btn-sm" id="btn-slot">🎰 老虎机</button>
+        <button class="btn btn-shop btn-sm" id="btn-shop" style="display:none">🛒 商店</button>
+        <button class="btn btn-danger btn-sm" id="btn-battle">🧬 合成</button>
+      </div>
+      <div id="speed-row" style="display:none;gap:8px;justify-content:center;margin-top:4px">
+        <button class="btn btn-secondary btn-sm" id="speed-1">▶ 1x</button>
+        <button class="btn btn-secondary btn-sm" id="speed-2">▶▶ 2x</button>
+        <button class="btn btn-secondary btn-sm" id="speed-4">▶▶▶ 4x</button>
+      </div>
+      <div id="wave-progress"></div>
+    </div>
+  </div>
+
+  <!-- 结算屏 -->
+  <div id="screen-settle" class="screen">
+    <div id="settle-title"></div>
+    <div class="settle-stats">
+      <div id="settle-wave"></div>
+      <div id="settle-detail"></div>
+      <div style="margin-top:8px;color:#94a3b8;font-size:11px">本局最终阵容</div>
+      <div id="settle-grid"></div>
+      <div id="settle-invest"></div>
+    </div>
+    <button class="btn btn-primary" id="btn-restart">再来一局</button>
+  </div>
+</div>
+
+<!-- 老虎机弹窗 -->
+<div class="modal" id="modal-slot">
+  <div class="modal-box">
+    <button class="modal-close" id="slot-close">✕</button>
+    <h3>🎰 幸运老虎机</h3>
+    <div id="slot-hud"><span>💰 <b id="slot-copper">40</b></span><span class="cost" id="slot-cost">下次消耗 10</span></div>
+    <div id="hidden-preview"></div>
+    <div id="nudge-row"><button class="col-nudge-btn" id="nudge-0">⬇️<span class="col-tag">Ⅰ列</span></button><button class="col-nudge-btn" id="nudge-1">⬇️<span class="col-tag">Ⅱ列</span></button><button class="col-nudge-btn" id="nudge-2">⬇️<span class="col-tag">Ⅲ列</span></button></div>
+    <div id="lock-row" style="display:none"><button id="btn-lock-mode" class="btn btn-secondary btn-sm">🔒 进入锁定模式</button><span id="lock-hint" style="font-size:11px;color:#94a3b8;margin-left:8px">点击九宫格某个格子锁定，下次抽取该格保留（每波仅可使用 1 次）</span><span id="lock-status" style="font-size:11px;color:#f59e0b;margin-left:8px"></span></div>
+    <div id="slot-grid"></div>
+    <div id="slot-result-text">祝你好运！</div>
+    <div class="slot-actions">
+      <button class="btn btn-primary btn-sm" id="btn-spin">消耗 10 铜钱抽卡</button>
+      <button class="btn btn-secondary btn-sm" id="btn-swap-center" style="display:none">🔄 中心交换</button>
+      <button class="btn btn-secondary btn-sm" id="btn-done-spin" style="display:none">完成</button>
+    </div>
+    <div id="prob-panel"></div>
+    <div id="target-row" style="display:none"><span>🎯 定向目标：</span><span id="target-icons"></span><button class="btn btn-secondary btn-sm" id="btn-target" style="margin-left:auto">选择</button></div>
+    <div id="ability-panel"><b>老虎机当前能力</b><div id="ability-list">暂无</div></div>
+  </div>
+</div>
+
+<!-- 定向目标选择弹窗 -->
+<div class="modal" id="modal-target">
+  <div class="modal-box">
+    <button class="modal-close" id="target-close">✕</button>
+    <h3>🎯 选择定向目标</h3>
+    <div id="target-hint" style="text-align:center;font-size:12px;color:#94a3b8;margin-bottom:4px"></div>
+    <div id="target-grid"></div>
+    <div style="text-align:center;margin-top:8px"><button class="btn btn-primary btn-sm" id="btn-target-confirm">确认</button></div>
+  </div>
+</div>
+
+<!-- 商店弹窗 -->
+<div class="modal" id="modal-shop">
+  <div class="modal-box">
+    <button class="modal-close" id="shop-close">✕</button>
+    <h3>🛒 战术商店</h3>
+    <div style="text-align:center;font-size:13px;margin-bottom:10px">金币：<b id="shop-gold" style="color:#fbbf24">0</b>　携带：(<span id="shop-carry">0</span>/4)</div>
+    <div id="shop-list"></div>
+    <div style="text-align:center;margin-top:8px"><button class="btn btn-secondary btn-sm" id="btn-shop-refresh">🔄 刷新（<span id="shop-refresh-cost">2</span> 金币）</button></div>
+  </div>
+</div>
+
+<!-- 投资弹窗 -->
+<div class="modal" id="modal-invest">
+  <div class="modal-box">
+    <h3>🎰 老虎机升级</h3>
+    <div style="text-align:center;font-size:12px;color:#94a3b8;margin-bottom:12px">选择一项能力（必须选择）　金币：<b id="invest-gold" style="color:#fbbf24">0</b></div>
+    <div id="invest-list"></div>
+    <div style="text-align:center;margin-top:8px"><button class="btn btn-secondary btn-sm" id="btn-invest-refresh">🔄 刷新（<span id="invest-refresh-cost">2</span> 金币）</button></div>
+  </div>
+</div>
+
+<!-- 合成阶段面板（非阻塞，棋盘与备用区仍可拖拽/交换） -->
+<div id="synth-panel">
+  <div class="synth-panel-head">
+    <span>🧬 合成阶段</span>
+    <button class="synth-collapse" id="btn-synth-collapse">收起 ▾</button>
+  </div>
+  <div class="synth-panel-body">
+    <div id="synth-hint">👆 拖动<span class="synth-highlight" style="display:inline-block;background:rgba(250,204,21,.25);border:1px solid #facc15;border-radius:4px;padding:0 4px">高亮建筑</span>到一起进行<b>合成/升星</b>（合成不消耗材料，高阶件会重置返还等量0星件）。本阶段可随时拖动九宫格内建筑互换位置、反复升星/合成，吃满邻接增幅后再点右侧按钮开战。（注意：这里拖动的是建筑九宫格布局，与老虎机转轴调整、列下移、中心交换是两套独立系统）</div>
+    <div id="synth-list"></div>
+  </div>
+  <div class="synth-actions">
+    <button class="btn btn-primary btn-sm" id="btn-synth-confirm">⚔️ 确认并开始战斗</button>
+    <button class="btn btn-secondary btn-sm" id="btn-synth-skip">跳过合成</button>
+  </div>
+</div>
+
+<!-- 合成动画 -->
+<div class="synth-anim" id="synth-anim"><div class="big" id="synth-anim-icon"></div><div class="txt" id="synth-anim-text"></div></div>
+
+<div id="toast"></div>
+<div id="drag-ghost"></div>
+<div id="rotate-tip">📱<br>请竖屏游玩</div>
+
+<script>
+'use strict';
+
+/* =====================================================================
+ *  CONFIG 数据层（类 Excel 配置表 · 单一信息源）
+ *  -------------------------------------------------------------------
+ *  设计思想（参照 facade2.0 beat-schema 三层结构）：
+ *    ① schema（本注释块）—— 字段/类型/约束说明，策划照着写
+ *    ② data（下方各区块）—— 实际数值，改这里不改代码
+ *    ③ loader（configLoader）—— 启动时校验必填字段 → 注入 → 缺失告警
+ *  约束：单文件 HTML（R3），配置内嵌，双击可跑，无外部依赖。
+ *  调参后刷新浏览器即生效；缺字段会用默认值 + console.warn，不静默崩溃。
+ *
+ *  区块一览：
+ *    CONFIG.meta         版本与文档指向
+ *    CONFIG.waves        波次/节点序列（type=normal|elite|resource|boss）
+ *    CONFIG.economy      双货币（铜钱 soft / 金币 hard）投放与消耗
+ *    CONFIG.buildings    全部建筑(id/name/icon/tier/school/战斗属性/描述)
+ *    CONFIG.recipes      异类配方合成线(product + 2个材料mats)
+ *    CONFIG.slot_odds    老虎机权重基值 REEL_BASE、流派倾斜系数、反堆叠阈值
+ *    CONFIG.star_abilities 升星能力池(id1~10，每建筑≤2条不重复)
+ *    CONFIG.score        排行榜计分系数(稀有度/星级/血量/货币权重)
+ *  详细字段说明见 docs/配置表说明-九宫防线.md
+ * ===================================================================== */
+const CONFIG = {
+meta:{version:'v2.0.0',schemaDoc:'docs/配置表说明-九宫防线.md',note:'单一信息源：改本对象数值即调参，无需动消费逻辑'},
+
+/* ---- 关卡节点序列(共18关)：三段式节奏 无Boss铺垫期(1~5)→Boss递进期(6~14)→终局释放(15~18) ---- */
+/* 用户裁决(2026-08)：首Boss必须≥第6关；前5波为"暗藏压力"无Boss期(怪量/速度/hpMult阶梯爬升)，为第6波首Boss做铺垫；
+ * 5个Boss均匀后移并呈"呼吸式递进"(间隔1-2-3波交替)，避免扎堆，形成山雨欲来的压迫感。 ---- */
+/* 三选一(rewardBuild=1)共6次，作为"通关奖励"在【完成该关结算后】触发，节点 id 2/4/7/9/12/13；释放段(15~18)与终局Boss(18)不弹窗打断 ---- */
+/* 敌人强度分档：T1轻松(1.0~1.2) T2爬坡(1.3~1.6) T3施压(1.7~1.8) T4成型(1.9~2.2) T5终局(2.3~2.55) ---- */
+waves:[
+  /* ===== 无Boss铺垫期(1~5)：暗藏压力，怪量/速度/hpMult阶梯爬升，让玩家安心攒build ===== */
+  {id:1, type:'normal', normal:4,                       hpMult:1.00, rewardBuild:0, bonusGold:0, note:'教学：认识放置与合成'},
+  {id:2, type:'normal', normal:6,                       hpMult:1.10, rewardBuild:1, bonusGold:0, note:'攒初始建筑 → 完成后第1次三选一'},
+  {id:3, type:'normal', normal:6,fast:2,                hpMult:1.20, rewardBuild:0, bonusGold:0, note:'引入快速怪，压力渐起'},
+  {id:4, type:'normal', normal:7,fast:2,                hpMult:1.35, rewardBuild:1, bonusGold:0, note:'怪量↑ → 完成后第2次三选一'},
+  {id:5, type:'elite',  normal:8,fast:3,                hpMult:1.55, rewardBuild:0, bonusGold:0, note:'★第1道检验关(无Boss)，考验前期build'},
+  /* ===== Boss递进期(6~14)：首Boss登场，间隔呈1-2-1-2-3呼吸感 ===== */
+  {id:6, type:'boss',   normal:6,fast:3,tanky:2,boss:1, hpMult:1.65, rewardBuild:0, bonusGold:0, note:'★首Boss🗿装甲巨人(第6关门槛)'},
+  {id:7, type:'normal', normal:7,fast:3,tanky:2,        hpMult:1.70, rewardBuild:1, bonusGold:0, note:'Boss后养成 → 完成后第3次三选一'},
+  {id:8, type:'normal', normal:7,fast:4,tanky:2,        hpMult:1.75, rewardBuild:0, bonusGold:0, note:'引入重甲怪，为下一Boss铺垫'},
+  {id:9, type:'boss',   normal:6,fast:4,tanky:3,boss:2, hpMult:1.85, rewardBuild:1, bonusGold:0, note:'★Boss🧟召唤领主 → 完成后第4次三选一'},
+  {id:10,type:'elite',  normal:8,fast:4,tanky:3,        hpMult:1.95, rewardBuild:0, bonusGold:0, note:'★第2道检验关(无Boss)'},
+  {id:11,type:'normal', normal:8,fast:4,tanky:3,stealth:3, hpMult:2.25, rewardBuild:0, bonusGold:0, note:'隐身怪登场，成型前夕蓄力'},
+  {id:12,type:'boss',   normal:7,fast:4,tanky:3,stealth:3,boss:3, hpMult:2.40, rewardBuild:1, bonusGold:0, note:'★Boss😈狂暴魔王 → 完成后第5次三选一'},
+  {id:13,type:'normal', normal:8,fast:5,tanky:3,stealth:3, hpMult:2.45, rewardBuild:1, bonusGold:0, note:'满成型集结 → 完成后第6次三选一(最后一次)'},
+  {id:14,type:'normal', normal:9,fast:5,tanky:4,stealth:3, hpMult:2.50, rewardBuild:0, bonusGold:0, note:'构筑封顶(终局前最后一次实战)'},
+  /* ===== 终局释放段(15~18)：满build收割，Boss密度升高收束情绪 ===== */
+  {id:15,type:'boss',   normal:8,fast:5,tanky:4,stealth:3,boss:4, hpMult:2.55, rewardBuild:0, bonusGold:0, note:'★Boss🐲深渊巨龙 · 满build秒杀秀'},
+  {id:16,type:'normal', normal:10,fast:5,tanky:4,stealth:3, hpMult:2.65, rewardBuild:0, bonusGold:0, note:'怪潮收割(量大管饱)'},
+  {id:17,type:'normal', normal:12,fast:6,tanky:4,stealth:4, hpMult:2.80, rewardBuild:0, bonusGold:0, note:'终极怪潮(量大管饱)'},
+  {id:18,type:'boss',   normal:10,fast:6,tanky:4,stealth:4,boss:5, hpMult:3.00, rewardBuild:0, bonusGold:0, note:'★终局真·Boss👁️终焉之眼 · 满build碾压收官'}
+],
+
+/* ---- 双货币经济：copper(软/大量) 用于抽老虎机；gold(硬/稀缺) 用于商店技能+刷新Build/投资 ---- */
+/* 设计要点：
+ *  - 铜钱(软)：随波次递增(perWaveBase + wave*perWaveScale + 击杀)，唯一用途=抽卡，保持宽裕不打断攒build乐趣。
+ *  - 金币(硬)：只在高难节点(elite/boss)投放，普通波几乎不给金 → 强化"金币=打到高难才有"的稀缺定位。
+ *    金币痛点靠【刷新阶梯化(跨波累积)】扩大消耗深度，而非靠多投放。
+ *  - 已删除"完美防守奖励"(规则复杂+后期必然失效+加剧金币通胀，收益<复杂度成本)。
+ *  - 投资三选一免费(必选成长)，仅【刷新候选】收费。
+ *  - 所有投放/消耗统一从此读取(无硬编码)。 */
+economy:{
+  copper:{initial:150, perWaveBase:30, perWaveScale:4, killNormal:3, killBoss:70, failResetNote:'本波未中奖消耗递增，下一波重置'},
+  gold:{initial:0, killBoss:5, carryCap:4, skillCapPerSkill:2,
+    /* 金币按节点类型投放。普通波=1(保底)：金币定位为“运气差时的安全网”——抽奖不顺可用金币去商店买道具，降低对抽奖的乘法依赖；精英/Boss 才是金币大头，维持稀缺定位。资源波当前不存在(预留分支未启用)。 */
+    perTier:{normal:1, elite:8, boss:8} },
+  spinCosts:[6,12,22,45,90], /* 抽卡阶梯成本，索引=min(spinCount,len-1)；每波重置。前3次总和40≤第1波收入(~43)，保证前期普通波也能抽3次凑初始build；后段45/90保留“攒一波”压力。玩家体感标尺=本波收入能抽几次(150底仓只够第1波启动，不计入后续)。 */
+  refreshTiers:[2,4,8,16],     /* 商店/投资刷新阶梯(各自独立计数)，索引=min(刷新次数,len-1)；整局跨波累积不重置 */
+  /* 血包：金币刚需消耗品。后期怪物变强→玩家需要回血→金币有了出口。定价3金，购买即恢复1点基地血量，不占技能携带栏；满血(baseHP>=max)时禁止购买，避免浪费。 */
+  medkit:{id:'medkit',name:'血包',icon:'🩹',cost:3,heal:1,note:'恢复1点基地血量，满血不可购买'}
+},
+
+/* ---- 建筑总表：school=fire|water（第三流派预留 school 枚举扩展，内容暂不填）---- */
+buildings:{
+archer:{id:'archer',name:'短弓',icon:'🏹',tier:1,school:'fire',rarity:'common',dmg:10,cd:900,range:.55,single:1,desc:'单体速射：锁定最近敌人快速射箭(伤10)。可合成：+火盆→重型火箭塔'},
+stone:{id:'stone',name:'投石机',icon:'🪨',tier:1,school:'fire',rarity:'common',dmg:32,cd:2400,range:.80,aoe:.18,desc:'范围打击：砸向1个敌人并溅伤周围一圈(伤32)'},
+firebasin:{id:'firebasin',name:'火盆',icon:'🔥',tier:2,school:'fire',rarity:'uncommon',dmg:0,synergy:{neighbor:'archer',stat:'dmg',mult:2.0,note:'相邻短弓时使其伤害×2并转火焰(协同是最优解放大器)'},desc:'辅助：放在短弓🏹旁边，让短弓伤害翻倍、变成火箭。自身不攻击。合成路线：+短弓→重型火箭塔🚀'},
+smith:{id:'smith',name:'铁匠铺',icon:'⚒️',tier:2,school:'fire',rarity:'uncommon',dmg:0,synergy:{anyTower:{stat:'spd',perStar:.3,note:'相邻任意塔攻速+30%/星'}},desc:'辅助：让上下左右相邻塔攻速+30%(每星再+30%)，自身不攻击'},
+cart:{id:'cart',name:'火药车',icon:'💣',tier:2,school:'fire',rarity:'rare',dmg:0,trigger:'fire',trigDmg:150,trigHits:3,trigCdMs:5000,selfBoom:{hpRate:.08,interval:10,note:'每10秒对同列敌人造成最大生命8%灼烧'},desc:'自爆火力车：放在场上每10秒自动灼烧同列敌人；当🏹(需被🔥转为火箭)或🚀在同列每3次命中敌人时，额外引爆全屏(伤150，Boss减半)'},
+heavyRocket:{id:'heavyRocket',name:'重型火箭塔',icon:'🚀',tier:3,school:'fire',rarity:'rare',dmg:26,cd:450,range:.60,single:1,fire:1,burn:1,recipe:['archer','firebasin'],desc:'合成产物(短弓+火盆)：高射速火焰箭，命中附加灼烧持续伤'},
+waterTower:{id:'waterTower',name:'水炮塔',icon:'💧',tier:1,school:'water',rarity:'common',dmg:11,cd:1000,range:.60,single:1,wet:1,desc:'单体水弹(伤11)，命中使敌人潮湿减速。可合成：+线圈→雷暴降临塔'},
+coil:{id:'coil',name:'静电线圈',icon:'⚡',tier:1,school:'water',rarity:'common',dmg:13,cd:1300,range:.65,chain:2,lightning:1,desc:'闪电链：击中主目标后电弧再跳2个最近敌人(分别70%/49%伤)'},
+tank:{id:'tank',name:'储能水槽',icon:'🌊',tier:2,school:'water',rarity:'uncommon',dmg:0,synergy:{neighborAny:'water',stat:'dmg',perStar:.15,note:'相邻水流建筑(线圈/水炮/引雷针/雷暴塔)伤害+15%/星；邻线圈时其攻击追加一圈溅射'},desc:'辅助：让旁边的水流建筑(⚡、💧、🗼、🌩️)伤害+15%(每星再+15%)；如果贴着⚡，其每次攻击会额外炸开一圈小范围伤害。自身不攻击'},
+prism:{id:'prism',name:'魔力棱镜',icon:'🔮',tier:2,school:'water',rarity:'uncommon',dmg:0,synergy:{neighbor:'single',stat:'dmg',multAdd:.20,extraTarget:1,note:'相邻单体塔(短弓/重火箭/水炮)伤害+20%且多打1目标'},desc:'辅助：让旁边的单体塔(🏹、🚀、💧)伤害+20%且同时多打1个目标。自身不攻击'},
+needle:{id:'needle',name:'引雷避雷针',icon:'🗼',tier:2,school:'water',rarity:'rare',dmg:0,trigger:'lightning',trigDmg:130,selfRain:{rate:.06,interval:10,note:'每10秒对随机敌人落雷，潮湿敌伤害翻倍+麻痹'},wetAmplify:{perBolt:3,intervalMs:8000,note:'场上每3个潮湿敌人降下1道全屏落雷(伤130，潮湿敌翻倍+麻痹)，8秒最小间隔'},desc:'引雷阵地：放在场上每10秒自动落雷劈随机敌人(潮湿敌人伤害翻倍+麻痹)；感应💧挂的潮湿——场上每有3个潮湿敌人，额外降下1道全屏落雷(伤130，潮湿敌翻倍+麻痹)。自身不攻击'},
+stormTower:{id:'stormTower',name:'雷暴降临塔',icon:'🌩️',tier:3,school:'water',rarity:'rare',dmg:20,cd:1000,range:.70,pierce:1,lightning:1,recipe:['waterTower','coil'],desc:'合成产物(水炮+线圈)：穿透水刀贯穿一列，命中麻痹敌人'}
+},
+
+/* ---- 异类配方合成线 ---- */
+recipes:[
+  {product:'heavyRocket',mats:['archer','firebasin']},
+  {product:'stormTower',mats:['waterTower','coil']}
+],
+
+/* ---- 老虎机权重：reel_base 越低越稀有；tilt 为流派倾斜系数；antiStackThreshold 为反堆叠阈值 ---- */
+slot_odds:{
+  reel_base:{archer:14,waterTower:14,stone:12,coil:13,firebasin:12,tank:12,smith:9,prism:9,cart:9,needle:9},
+  tilt:{strong:1.15,weak:0.90,triggerThreshold:3, note:'单流派≥triggerThreshold件才倾斜，收窄滚雪球'},
+  antiStack:{threshold:4,half:true},
+  openingBoost:{waves:2,archer:6,waterTower:6, note:'前2波保底'}
+},
+
+/* ---- 升星能力池：id1~10，执行阶段按规则分配给各建筑(每建筑≤2条不重复) ---- */
+star_abilities:[
+  {id:1,name:'连击倾向',desc:'每次攻击有60%概率攻击两次',effectType:'double_strike',value:0.6},
+  {id:2,name:'疾射',desc:'攻速提高5%',effectType:'atk_speed',value:0.05},
+  {id:3,name:'破甲',desc:'无视目标20%护甲',effectType:'armor_pierce',value:0.20},
+  {id:4,name:'吸血',desc:'击杀敌人回复1点基地血量',effectType:'lifesteal',value:1},
+  {id:5,name:'溅射增幅',desc:'范围伤害提高15%',effectType:'aoe_amp',value:0.15},
+  {id:6,name:'控制延长',desc:'减速/麻痹效果持续时间+30%',effectType:'control_ext',value:0.30},
+  {id:7,name:'连锁增强',desc:'闪电链额外跳1个目标',effectType:'chain_plus',value:1},
+  {id:8,name:'暴击储备',desc:'暴击伤害提高25%',effectType:'crit_dmg',value:0.25},
+  {id:9,name:'经济嗅觉',desc:'该建筑在场时每波额外+3铜钱',effectType:'econ_passive',value:3},
+  {id:10,name:'成长适应',desc:'升星时额外获得5%全属性',effectType:'growth',value:0.05}
+],
+
+/* ---- 排行榜计分系数：结算总分 = Σ(建筑稀有度分×星级分) + 剩余血量×hpWeight + 剩余货币 ---- */
+score:{
+  rarityPoints:{common:10,uncommon:18,rare:30,epic:45},
+  starMultiplier:[1,1.5,2.0,2.8,3.6,4.4], /* index=star */
+  hpWeight:20,
+  copperScoreDivisor:10, /* 每N铜钱折算1分 */
+  goldWeight:50
+}
+};
+
+/* ================= configLoader：启动校验 + 派生兼容层 ================= */
+(function configLoader(){
+  const warn=(k,msg)=>{ if(typeof console!=='undefined') console.warn('[CONFIG] '+k+' 缺失或非法：'+msg+'（已用默认值）'); };
+  /* 必填区块存在性检查 */
+  ['meta','waves','economy','buildings','recipes','slot_odds','star_abilities','score'].forEach(k=>{
+    if(!CONFIG[k]) warn(k,'顶层区块不存在');
+  });
+  /* waves 至少1个节点 */
+  if(!Array.isArray(CONFIG.waves)||CONFIG.waves.length===0) warn('waves','应为非空数组');
+  /* slot_odds.tilt 系数合理性 */
+  if(CONFIG.slot_odds&&CONFIG.slot_odds.tilt){
+    if(!(CONFIG.slot_odds.tilt.strong>1)) warn('slot_odds.tilt.strong','应>1（当前'+CONFIG.slot_odds.tilt.strong+'）');
+    if(!(CONFIG.slot_odds.tilt.weak>0&&CONFIG.slot_odds.tilt.weak<1)) warn('slot_odds.tilt.weak','应∈(0,1)');
+  }
+  /* buildings 每个必须有 id/name/icon/tier/school */
+  if(CONFIG.buildings){Object.keys(CONFIG.buildings).forEach(id=>{
+    const b=CONFIG.buildings[id];
+    if(!b.name||!b.icon||!b.tier||!b.school) warn('buildings.'+id,'缺少 name/icon/tier/school');
+  });}
+  /* 版本号注入到全局，供 HUD/文档追溯 */
+  window.__CONFIG_VERSION__=CONFIG.meta.version;
+})();
+
+/* ================= 以下为派生兼容层（从 CONFIG 取值，保持旧变量名，零回归） ================= */
+const STAR_MULT=CONFIG.score.starMultiplier;
+const BUILDINGS=CONFIG.buildings;
+const RECIPES=CONFIG.recipes;
+const REEL_BASE=CONFIG.slot_odds.reel_base;
+const SPIN_COSTS=CONFIG.economy.spinCosts;
+/* SKILLS/ABILITIES/ENEMY_TYPES/BOSSES/PAYLINES 暂未迁入 CONFIG，保持原样 */
+
+/* WAVES 兼容层：把 CONFIG.waves(含 type/hpMult/rewardBuild) 映射为旧结构 {normal,fast,tanky,stealth,boss}，
+ * 供 enterBattle 里 WAVES[G.wave-1] 沿用，无需改战斗生成逻辑 */
+const WAVES=CONFIG.waves.map(n=>({normal:n.normal||0,fast:n.fast||0,tanky:n.tanky||0,stealth:n.stealth||0,boss:n.boss||0}));
+/* 总节点数（单局波次数） */
+function totalWaveNodes(){return CONFIG.waves.length;}
+/* 按 CONFIG.waves 的 type 判断节点性质（替代旧的 BOSS_WAVES/INVEST_WAVES 硬编码） */
+function nodeTypeOf(w){const n=CONFIG.waves[w-1];return n?n.type:'normal';}
+function isBossWave(w){return nodeTypeOf(w)==='boss';}
+function isEliteWave(w){return nodeTypeOf(w)==='elite';}
+function isResourceWave(w){return nodeTypeOf(w)==='resource';}
+/* 三选一奖励节点：严格按 CONFIG.waves 的 rewardBuild=1 判定（奖励节点 id 2/4/7/9/12/13，
+ * 作为"通关奖励"在完成该关结算后由 endWave() 触发；id3起才开放，释放段与终局Boss不弹） */
+function isInvestWave(w){const n=CONFIG.waves[w-1];return !!(n&&n.rewardBuild===1);}
+
+/* ================= CONFIG 健康自检（浏览器内可见，替代 F12 控制台） ================= */
+(function reportConfigHealth(){
+  function run(){
+    if(typeof log!=='function') return; /* DOM/log 未就绪则稍后重试 */
+    const blocks=['meta','waves','economy','buildings','recipes','slot_odds','star_abilities','score'];
+    const missing=blocks.filter(k=>!CONFIG[k]);
+    const bldCount=Object.keys(CONFIG.buildings||{}).length;
+    const wavesCount=(CONFIG.waves||[]).length;
+    const abilitiesCount=(CONFIG.star_abilities||[]).length;
+    const reelCount=Object.keys(CONFIG.slot_odds&&CONFIG.slot_odds.reel_base||{}).length;
+    if(missing.length){
+      log('⚠️ CONFIG 缺失区块：'+missing.join(',')+'（已用默认值，请检查配置）');
+    }else{
+      log('✅ CONFIG 已加载：建筑'+bldCount+' · 波次节点'+wavesCount+' · 概率符号'+reelCount+' · 升星能力'+abilitiesCount+' · 版本'+(CONFIG.meta.version||'?'));
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run);
+  else run();
+})();
+
+const ENEMY_TYPES={
+normal:{icon:'👾',hp:35,speed:10,name:'普通怪'},
+fast:{icon:'🦎',hp:22,speed:18,name:'疾行怪'},
+tanky:{icon:'🐢',hp:130,speed:6,name:'重甲怪'},
+stealth:{icon:'👻',hp:65,speed:12,name:'隐匿怪',phase:1}};
+const BOSSES={1:{icon:'🗿',name:'装甲巨人',hp:400,speed:5,shield:1},2:{icon:'🧟',name:'召唤领主',hp:900,speed:4.5,summon:1},3:{icon:'😈',name:'狂暴魔王',hp:1800,speed:4,enrage:1},4:{icon:'🐲',name:'深渊巨龙',hp:2600,speed:3.5,summon:1,aoe:1},5:{icon:'👁️',name:'终焉之眼',hp:3600,speed:3,enrage:1,shield:1,summon:1}};
+/* 旧硬编码 WAVES 已移除：统一由上方 CONFIG.waves 经兼容层映射生成，避免 const 重复声明导致整段脚本崩溃 */
+const SKILLS={
+freeze:{name:'绝对零度',icon:'❄️',cost:4,desc:'全部敌人冻结3秒'},
+strike:{name:'毁灭打击',icon:'🧨',cost:5,desc:'全场敌人250伤害'},
+fireAtk:{name:'狂热药水',icon:'🧪',cost:3,desc:'本波火药建筑攻击+50%',buff:{school:'fire',stat:'dmg',v:.5}},
+fireSpd:{name:'弹药倾泻',icon:'💥',cost:4,desc:'本波火药建筑攻速+30%',buff:{school:'fire',stat:'spd',v:.3}},
+waterAtk:{name:'雷暴充能',icon:'⚡',cost:3,desc:'本波雷水建筑攻击+50%',buff:{school:'water',stat:'dmg',v:.5}},
+waterSpd:{name:'潮汐共鸣',icon:'🌊',cost:4,desc:'本波雷水建筑攻速+30%',buff:{school:'water',stat:'spd',v:.3}}};
+const ABILITIES=[
+{id:'E1',dir:'economy',rar:'common',name:'未中奖返还',desc:'每次未中奖返还 4 铜钱'},
+{id:'E2',dir:'economy',rar:'common',name:'累计赠送',desc:'每累计 3 次抽取，第 4 次免费'},
+{id:'E3',dir:'economy',rar:'uncommon',name:'中奖返利',desc:'任何中奖抽取返还 5 铜钱'},
+{id:'E4',dir:'economy',rar:'uncommon',name:'连败递增',desc:'连续未中奖时每次额外返还 +2 铜钱（可叠加）'},
+{id:'D1',dir:'direction',rar:'common',name:'目标锁定',desc:'指定 1 种建筑，其中奖概率 +5%'},
+{id:'D2',dir:'direction',rar:'uncommon',name:'中心交换',desc:'每次未中奖后，可交换中心格与外围一格'},
+{id:'D3',dir:'direction',rar:'uncommon',name:'图标锁定',desc:'每波 1 次，锁定 1 个图标，下次抽取该格保留'},
+{id:'D4',dir:'direction',rar:'epic',name:'双重目标',desc:'可指定 2 种建筑，各 +5% 中奖概率'},
+{id:'L1',dir:'streak',rar:'common',name:'额外下移',desc:'每波列下移次数 +1（共 2 次）'},
+{id:'L2',dir:'streak',rar:'common',name:'中奖预热',desc:'某建筑中奖后，该建筑下次出现概率 +5%'},
+{id:'L3',dir:'streak',rar:'uncommon',name:'连击加成',desc:'连续 2 次中奖同一建筑，额外获得该建筑 +1'},
+{id:'L4',dir:'streak',rar:'epic',name:'隐藏预览',desc:'持续显示三列各自下 1 格的隐藏图标'}];
+const PAYLINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+/* SPIN_COSTS 已由上方 CONFIG.economy.spinCosts 派生，此处不再重复声明 */
+
+/* ================= 全局状态 ================= */
+let G=null,bfEl,gridEl,reserveEl,rAF=null,lastTime=0;
+const $=id=>document.getElementById(id);
+
+function newGame(){
+return{screen:'title',phase:'prep',battleSpeed:1,wave:1,baseHP:10,copper:150,gold:0,
+spinCount:0,nudgeUsed:0,nudgeMax:1,consecutiveFails:0,spinTotal:0,
+reels:null,linesWon:[],adjustMode:false,swapMode:false,swapUsed:false,
+board:Array(9).fill(null),reserve:[],
+skills:{},shopOffers:[],ownedAbilities:[],investOffers:[],investCount:0,
+shopRefreshCount:0,investRefreshCount:0, /* 商店/投资刷新阶梯计数，每波重置 */
+targetSymbols:[],lockedCell:-1,lockUsed:false,lastWinSymbols:[],winStreak:0,heatWeight:{},
+buffs:{fireDmg:1,fireSpd:1,waterDmg:1,waterSpd:1},
+enemies:[],bullets:[],spawnQueue:[],spawnTimer:0,spawnInterval:1.5,
+killCopper:0,killGold:0,leakedThisWave:0,bossRef:null,
+stats:{kills:0,leaks:0,builds:0,synths:0,investPath:[]},over:false};
+}
+/* 重置战斗残留 DOM（敌人、子弹、浮层） */
+function clearBattlefield(){
+bfEl.querySelectorAll('.enemy,.bullet,.fx-line,.fx-beam,.fx-boom').forEach(el=>el.remove());
+}
+
+/* ================= 屏幕管理 ================= */
+function showScreen(name){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$('screen-'+name).classList.add('active');G.screen=name;}
+
+/* ================= 工具 ================= */
+let toastTimer=null;
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200);}
+function log(msg){const box=$('log-box');const d=document.createElement('div');d.textContent=msg;box.appendChild(d);while(box.children.length>5)box.removeChild(box.firstChild);}
+function starIcons(star){let h='<div class="stars">';for(let i=0;i<5;i++)h+='<span class="'+(i<star?'on':'')+'">★</span>';return h+'</div>';}
+
+/* ================= HUD 渲染 ================= */
+function renderHUD(){
+$('hud-wave').textContent='第 '+G.wave+'/'+totalWaveNodes()+' 波';
+$('hud-hp').textContent='❤️ '+G.baseHP;
+$('hud-copper').textContent='💰 '+G.copper;
+$('hud-gold').textContent='🪙 '+G.gold;
+renderWaveProgress();
+}
+/* #3 节点式进度条：每波一个节点，按 CONFIG.waves 的 type 标注(Boss/精英/资源/投资) */
+function renderWaveProgress(){
+const bar=$('wave-progress');if(!bar)return;
+const total=totalWaveNodes();
+let html='';
+for(let w=1;w<=total;w++){
+let cls='wp-node';
+let inner=String(w);
+const t=nodeTypeOf(w);
+if(t==='boss'){cls+=' boss';inner='👹';}
+else if(t==='elite'){cls+=' elite';inner='⚔️';}
+else if(t==='resource'){cls+=' resource';inner='💰';}
+if(isInvestWave(w)&&t!=='boss'){cls+=' invest';if(!inner.match(/^[👹⚔️💰]/))inner='🎰';}
+if(w===G.wave)cls+=' current';else if(w<G.wave)cls+=' done';
+const label=t==='boss'?' · Boss战':t==='elite'?' · 精英关':t==='resource'?' · 资源补给':isInvestWave(w)?' · 老虎机升级':'';
+html+='<div class="'+cls+'" title="第'+w+'波'+label+'">'+inner+'<span class="wp-num">'+w+'</span></div>';
+if(w<total)html+='<div class="wp-line '+(w<G.wave?'done':'')+'"></div>';
+}
+bar.innerHTML=html;
+}
+
+/* ================= 九宫格与备用区渲染 ================= */
+function renderBoard(){
+if(!gridEl.children.length){for(let i=0;i<9;i++){const c=document.createElement('div');c.className='cell';c.dataset.idx=i;c.dataset.src='grid';gridEl.appendChild(c);}}
+for(let i=0;i<9;i++){const c=gridEl.children[i],b=G.board[i];c.innerHTML='';c.classList.toggle('occupied',!!b);
+if(b){c.textContent=BUILDINGS[b.id].icon;c.innerHTML+=starIcons(b.star);c.insertAdjacentHTML('beforeend','<div class="tier-tag">T'+BUILDINGS[b.id].tier+'</div>');}}
+renderReserve();renderHUD();
+if(G.phase==='prep')updateBattleBtn();
+if(G.phase==='synth')highlightSynthTargets(); /* 拖动合成/升星后重新计算高亮 */
+}
+function renderReserve(){
+reserveEl.innerHTML='';
+if(!G.reserve.length){reserveEl.innerHTML='<span class="res-empty">（空）中奖建筑在九宫格满后自动进入此处</span>';return;}
+G.reserve.forEach((b,i)=>{const d=document.createElement('div');d.className='res-item';d.dataset.idx=i;d.dataset.src='reserve';d.textContent=BUILDINGS[b.id].icon;d.innerHTML+=starIcons(b.star);reserveEl.appendChild(d);});
+}
+/* ================= 建筑说明 tip ================= */
+function showBuildingTip(item){
+const b=BUILDINGS[item.id];const tip=$('building-tip');
+const sm=STAR_MULT[item.star];
+/* 类别标签 */
+const schoolLabel=b.school==='fire'?'<span style="color:#fbbf24">🔥 火药流</span>':'<span style="color:#7dd3fc">💧 雷水流</span>';
+const tierLabel='<span style="color:#94a3b8;font-size:10px">T'+b.tier+'</span>';
+/* 实时计算邻接加成（若在棋盘上）：收集每项加成的来源和数值 */
+const idx=G.board.indexOf(item);
+let adjDmg=b.dmg||0,adjCd=b.cd||9999,adjRange=b.range||0,adjNote='',bonusLines=[];
+if(idx>=0){
+let dmgMult=1,cdDiv=1;
+for(const ni of getNeighbors(idx)){
+const nb=G.board[ni];if(!nb)continue;const nsm=STAR_MULT[nb.star];
+const nbBase=BUILDINGS[nb.id];
+if(nb.id==='firebasin'&&item.id==='archer'){
+dmgMult*=2*nsm;bonusLines.push('🔥火盆×'+(2*nsm).toFixed(1));
+}
+if(nb.id==='smith'){cdDiv*=(1+.3*nsm);bonusLines.push('⚒️铁匠铺攻速+'+Math.round(.3*nsm*100)+'%');}
+if(nb.id==='prism'&&b.single){dmgMult*=(1+.2*nsm);bonusLines.push('🔮棱镜伤害+'+Math.round(.2*nsm*100)+'% +1目标');}
+if(nb.id==='tank'&&b.school==='water'){dmgMult*=(1+.15*nsm);bonusLines.push('🌊水槽伤害+'+Math.round(.15*nsm*100)+'%');}
+}
+/* 技能增益 */
+const sch=b.school;
+if(sch==='fire'){dmgMult*=G.buffs.fireDmg;cdDiv/=G.buffs.fireSpd;if(G.buffs.fireDmg!==1)bonusLines.push('🔥流派伤害×'+G.buffs.fireDmg.toFixed(1));if(G.buffs.fireSpd!==1)bonusLines.push('🔥流派攻速×'+G.buffs.fireSpd.toFixed(1));}
+else{dmgMult*=G.buffs.waterDmg;cdDiv/=G.buffs.waterSpd;if(G.buffs.waterDmg!==1)bonusLines.push('💧流派伤害×'+G.buffs.waterDmg.toFixed(1));if(G.buffs.waterSpd!==1)bonusLines.push('💧流派攻速×'+G.buffs.waterSpd.toFixed(1));}
+adjDmg=Math.round((b.dmg||0)*sm*dmgMult*10)/10;
+adjCd=((b.cd||9999)/cdDiv/1000).toFixed(1);
+adjRange=Math.round((b.range||0)*100)+'%';
+}
+let html='<div class="tip-head"><span class="tip-icon">'+b.icon+'</span>'+b.name+(item.star>0?' <span style="color:#ef4444">★'+item.star+'</span>':'')+' '+schoolLabel+' '+tierLabel+'<button class="tip-close">✕</button></div>';
+if(b.dmg>0){
+html+='<div class="tip-row"><span>伤害 <b>'+adjDmg+(bonusLines.length?' <span style="font-size:10px;color:#22c55e">(基础'+(b.dmg*sm)+')</span>':'')+'</b></span><span>攻速 <b>'+adjCd+'s</b></span><span>射程 <b>'+adjRange+'</b></span></div>';
+if(bonusLines.length)html+='<div class="tip-bonus">'+bonusLines.join(' · ')+'</div>';
+if(adjNote)html+='<div class="tip-special">'+adjNote+'</div>';
+}
+if(b.desc)html+='<div class="tip-special">'+b.desc+'</div>';
+if(item.star>0)html+='<div class="tip-special">星级成长：伤害 ×'+sm+'</div>';
+const asMat=RECIPES.filter(r=>r.mats.includes(item.id));
+if(asMat.length){
+html+='<div class="tip-recipe">🧬 可用配方：</div>';
+asMat.forEach(r=>{
+const other=r.mats.find(m=>m!==item.id);
+html+='<div class="tip-recipe">'+b.icon+' + '+BUILDINGS[other].icon+' '+BUILDINGS[other].name+' → '+BUILDINGS[r.product].icon+' '+BUILDINGS[r.product].name+'</div>';
+});
+}
+const isProduct=RECIPES.find(r=>r.product===item.id);
+if(isProduct)html+='<div class="tip-recipe">🧬 合成产物：'+isProduct.mats.map(m=>BUILDINGS[m].icon+' '+BUILDINGS[m].name).join(' + ')+'</div>';
+tip.innerHTML=html;tip.classList.add('show');
+}
+function hideBuildingTip(){$('building-tip').classList.remove('show');}
+
+/* ================= 指针拖拽（P0-02 修复：Pointer Events） ================= */
+let drag=null;const ghost=$('drag-ghost');
+function initDrag(){
+document.addEventListener('pointerdown',e=>{
+const src=e.target.closest('.cell,.res-item');if(!src||(G.phase!=='prep'&&G.phase!=='synth')||!src.dataset.src)return;
+const item=src.dataset.src==='grid'?G.board[+src.dataset.idx]:G.reserve[+src.dataset.idx];if(!item)return;
+drag={src:src.dataset.src,idx:+src.dataset.idx,item};
+ghost.textContent=BUILDINGS[item.id].icon;ghost.style.display='block';moveGhost(e);e.preventDefault();
+});
+document.addEventListener('pointermove',e=>{if(drag){moveGhost(e);highlightTarget(e);}});
+document.addEventListener('pointerup',e=>{
+if(!drag)return;ghost.style.display='none';
+clearHighlights();
+const el=document.elementFromPoint(e.clientX,e.clientY);
+if(el){
+const tgt=el.closest('.cell,.res-item');
+if(tgt&&tgt.dataset.src){
+const tSrc=tgt.dataset.src,tIdx=+tgt.dataset.idx;
+/* 放回原位：取消，不自我合并 */
+if(tSrc===drag.src&&tIdx===drag.idx){drag=null;return;}
+handleDrop(drag,tSrc,tIdx);
+}
+}
+drag=null;
+});
+}
+function moveGhost(e){ghost.style.left=e.clientX+'px';ghost.style.top=e.clientY+'px';}
+function highlightTarget(e){
+clearHighlights();const tgt=e.target.closest('.cell,.res-item');
+if(tgt&&tgt.dataset.src)tgt.classList.add('drag-target');
+}
+function clearHighlights(){document.querySelectorAll('.drag-target').forEach(el=>el.classList.remove('drag-target'));}
+/* 找九宫格第一个空位；无空位返回 -1 */
+function findEmptyCell(){return G.board.findIndex(b=>!b);}
+function handleDrop(d,tSrc,tIdx){
+const sItem=d.src==='grid'?G.board[d.idx]:G.reserve[d.idx];if(!sItem)return;
+const tItem=tSrc==='grid'?G.board[tIdx]:G.reserve[tIdx];
+/* 同名 → 升星（星级相加+1，上限5，超上限不允许） */
+if(tItem&&tItem.id===sItem.id){
+const newStar=tItem.star+sItem.star+1;
+if(newStar>5){toast('将超出星级上限，无法合并');return;}
+tItem.star=newStar;
+if(d.src==='grid')G.board[d.idx]=null;else G.reserve.splice(d.idx,1);
+toast('⭐ 升星！【'+BUILDINGS[tItem.id].name+'】提升至 '+newStar+' 星');
+log('⭐ '+BUILDINGS[tItem.id].name+' → '+newStar+'星');
+renderBoard();return;
+}
+/* 合成阶段：异名且命中配方 → 重置返还式合成
+ * 规则(用户裁决)：命中配方后，凡星级>0的材料"重置"为0星并按其星级返还等量0星件(不亏材料)，
+ * 再以0星材料重铸为0星高阶产物；返还件优先落九宫格空位→备战区→备战末尾(保证不损失)。 */
+if(G.phase==='synth'&&tItem){
+	const r=RECIPES.find(x=>x.mats.length===2&&x.mats.includes(sItem.id)&&x.mats.includes(tItem.id));
+	if(r){
+		/* 1. 计算返还列表：每个材料按其当前星级返还等量0星件(仅星级>0才返还) */
+		const returns=[];
+		if(sItem.star>0)for(let i=0;i<sItem.star;i++)returns.push({id:sItem.id,star:0});
+		if(tItem.star>0)for(let i=0;i<tItem.star;i++)returns.push({id:tItem.id,star:0});
+		/* 2. 消耗两份材料 */
+		if(d.src==='grid')G.board[d.idx]=null;else G.reserve.splice(d.idx,1);
+		if(tSrc==='grid')G.board[tIdx]=null;else G.reserve.splice(tIdx,1);
+		/* 3. 生成0星产物，落在目标位或最近空位 */
+		const prod={id:r.product,star:0};
+		let prodIdx=(tSrc==='grid')?tIdx:findEmptyCell();
+		if(prodIdx!==-1)G.board[prodIdx]=prod;else G.reserve.push(prod);
+		/* 4. 返还件逐个落位：九宫格空位→备战区→备战末尾 */
+		returns.forEach(rb=>{
+			let idx=findEmptyCell();
+			if(idx!==-1)G.board[idx]=rb;else G.reserve.push(rb);
+		});
+		G.stats.synths++;
+		if(tSrc==='grid'){const c=gridEl.children[tIdx];if(c)c.classList.add('synth-produce');}
+		$('synth-anim-icon').textContent=BUILDINGS[r.product].icon;
+		$('synth-anim-text').textContent='合成【'+BUILDINGS[r.product].name+'】';
+		$('synth-anim').classList.add('active');
+		setTimeout(()=>{$('synth-anim').classList.remove('active');gridEl.querySelectorAll('.synth-produce').forEach(c=>c.classList.remove('synth-produce'));},900);
+		const retTxt=returns.length?'（返还 '+returns.map(x=>BUILDINGS[x.id].name+'×1').join('、')+'）':'';
+		toast('🧬 合成：【'+BUILDINGS[sItem.id].name+'】+【'+BUILDINGS[tItem.id].name+'】→【'+BUILDINGS[r.product].name+'】'+retTxt);
+		log('🧬 '+BUILDINGS[r.product].name+'（手动）'+(returns.length?' · 返还'+returns.length+'件':''));
+		renderBoard();renderSynthPanel();
+		return;
+	}
+}
+/* 不同名/空位 → 换位或移动 */
+if(d.src==='grid'&&tSrc==='grid'){G.board[d.idx]=tItem;G.board[tIdx]=sItem;}
+else if(d.src==='grid'&&tSrc==='reserve'){G.board[d.idx]=null;G.reserve[tIdx]=sItem;}
+else if(d.src==='reserve'&&tSrc==='grid'){G.reserve.splice(d.idx,1);G.board[tIdx]=sItem;if(tItem)G.reserve.push(tItem);}
+else if(d.src==='reserve'&&tSrc==='reserve'){G.reserve[d.idx]=tItem;G.reserve[tIdx]=sItem;}
+renderBoard();
+}
+
+/* ================= 老虎机：权重与滚轴 ================= */
+function schoolCount(){
+let f=0,w=0;
+const all=[...G.board.filter(Boolean),...G.reserve];
+all.forEach(b=>{BUILDINGS[b.id].school==='fire'?f++:w++;});
+return{f,w};
+}
+function getCurrentWeights(){
+const w={...REEL_BASE};
+const all=[...G.board.filter(Boolean),...G.reserve];
+const count={};all.forEach(b=>{count[b.id]=(count[b.id]||0)+1;});
+/* 流派倾斜：单流派 ≥3 组件且另一流派 ≤1 时明显倾斜 */
+const{f,w:wc}=schoolCount();
+if(f>=3&&wc<=1){for(const k in w){w[k]=Math.round(REEL_BASE[k]*(BUILDINGS[k].school==='fire'?1.4:.75));}}
+else if(wc>=3&&f<=1){for(const k in w){w[k]=Math.round(REEL_BASE[k]*(BUILDINGS[k].school==='water'?1.4:.75));}}
+/* 配方引导：材料积压但缺配方件时，显著提升配方件权重 */
+if((count.archer||0)>=2&&!(count.firebasin||0))w.firebasin=Math.round(w.firebasin*2.5);
+if((count.waterTower||0)>=2&&!(count.coil||0))w.coil=Math.round(w.coil*2.5);
+/* 反堆叠：某建筑 ≥4 个时权重减半，防止全同种刷屏 */
+for(const k in count){if(count[k]>=4&&w[k]!==undefined)w[k]=Math.round(w[k]*0.5);}
+/* 定向流目标 +5 */
+G.targetSymbols.forEach(t=>{if(w[t]!==undefined)w[t]+=5;});
+/* 中奖预热 L2 */
+for(const k in G.heatWeight){if(w[k]!==undefined)w[k]+=G.heatWeight[k];}
+/* 前 2 波基础塔权重微调，保证首波可玩 */
+if(G.wave<=2){
+const boost={archer:6,waterTower:6};
+for(const k in boost){if(w[k]!==undefined)w[k]+=boost[k];}
+}
+return w;
+}
+function weightedSymbol(weights){
+let sum=0;for(const k in weights)sum+=weights[k];
+if(sum<=0){const ks=Object.keys(weights);return ks[Math.floor(Math.random()*ks.length)];}
+let r=Math.random()*sum;
+for(const k in weights){if(r<weights[k])return k;r-=weights[k];}
+const ks=Object.keys(weights);return ks[ks.length-1];
+}
+function generateReels(){
+const w=getCurrentWeights();
+return[0,1,2].map(()=>[0,1,2,3].map(()=>weightedSymbol(w)));
+}
+function reelCell(i){const col=i%3,row=Math.floor(i/3);return G.reels[col][row];}
+
+/* ================= 老虎机：抽取流程 ================= */
+function openSlot(){
+$('modal-slot').classList.add('active');
+$('slot-copper').textContent=G.copper;updateSpinCostUI();renderProbPanel();renderHiddenPreview();renderAbilityList();renderTargetRow();renderLockRow();
+if(!G.reels){G.reels=generateReels();renderSlotGrid();}
+/* 打开即刷新调整按钮状态，确保未抽奖也能调整格子 */
+updateNudgeBtns();showAdjustUI();
+}
+function closeSlot(){
+$('modal-slot').classList.remove('active');
+G.adjustMode=false;G.swapMode=false;
+/* 关闭老虎机即清空结果，下次打开将重新生成 reel，避免跨波残留 */
+G.reels=null;G.linesWon=[];
+}
+function updateSpinCostUI(){
+const cost=spinCost();$('slot-cost').textContent='下次消耗 '+cost;
+$('btn-spin').textContent='消耗 '+cost+' 铜钱抽卡';
+$('btn-spin').disabled=G.copper<cost;
+}
+function spinCost(){
+const idx=Math.min(G.spinCount,SPIN_COSTS.length-1);
+let c=SPIN_COSTS[idx];
+if(hasAb('E2')&&G.spinTotal>0&&(G.spinTotal+1)%4===0)c=0;
+return c;
+}
+function hasAb(id){return G.ownedAbilities.includes(id);}
+function doSpin(){
+const cost=spinCost();
+if(G.copper<cost){toast('铜钱不足！本波消耗已递增，下一波重置');return;}
+G.copper-=cost;G.spinCount++;G.spinTotal++;
+$('slot-copper').textContent=G.copper;
+G.adjustMode=false;G.swapMode=false;
+/* D3 锁定 */
+const lockedSym=G.lockedCell>=0?reelCell(G.lockedCell):null;
+const weights=getCurrentWeights();
+G.reels=[0,1,2].map(col=>{
+const arr=[0,1,2,3].map(()=>weightedSymbol(weights));
+if(lockedSym!==null&&lockedSym!==undefined){const col2=G.lockedCell%3,row=Math.floor(G.lockedCell/3);if(col2===col)arr[row]=lockedSym;}
+return arr;
+});
+G.lockedCell=-1;
+/* 转动动画 */
+const cells=$('slot-grid').children;let ticks=0;
+const iv=setInterval(()=>{
+for(const c of cells)c.textContent=BUILDINGS[weightedSymbol(weights)].icon;
+if(++ticks>8){clearInterval(iv);finishSpin();}
+},60);
+}
+function finishSpin(){
+renderSlotGrid();
+G.linesWon=[];
+let awarded=0;
+for(const line of PAYLINES){
+const s=reelCell(line[0]);
+if(reelCell(line[1])===s&&reelCell(line[2])===s){G.linesWon.push(line);
+awardBuilding(s);awarded++;
+line.forEach(i=>cells(i).classList.add('win'));}
+}
+processSpinResult(awarded,'');
+renderSlotGrid();updateSpinCostUI();renderProbPanel();renderHiddenPreview();
+showAdjustUI();
+}
+function cells(i){return $('slot-grid').children[i];}
+function processSpinResult(awarded,suffix){
+if(awarded>0){
+G.consecutiveFails=0;
+if(hasAb('E3')){G.copper+=5;}
+/* L3 连击(交集判定)：记录每次中奖命中的"建筑id集合"；若本次与上次集合有交集，
+ * 则交集中每个建筑都在已有结算外额外 +1(多建筑重合则各自都 +1)。
+ * 例：上次中[💧,🏹]、这次中[💧,⚡] → 交集[💧] → 💧额外+1；
+ *     上次中[💧,🏹]、这次中[💧,🏹] → 交集[💧,🏹] → 两者各额外+1。 */
+let sym=null; /* 兼容 L2 预热：取本次集合任一符号作为代表 */
+if(awarded>0){
+const cur=new Set();for(const ln of G.linesWon)cur.add(reelCell(ln[0]));
+const prev=new Set(G.lastWinSymbols||[]);
+const inter=[...cur].filter(s=>prev.has(s)); /* 交集 */
+if(hasAb('L3')&&inter.length){
+inter.forEach(s=>{awardBuilding(s);toast('🔥 连击加成！额外获得【'+BUILDINGS[s].name+'】+1');});
+}
+sym=[...cur][0]; /* L2 预热代表符号 */
+G.lastWinSymbols=[...cur]; /* 记录本次中奖建筑集合，供下次比对 */
+}
+/* L2 预热 */
+if(hasAb('L2')&&sym){G.heatWeight={};G.heatWeight[sym]=5;}
+$('slot-result-text').textContent='🎉 中奖 ×'+awarded+'！获得 '+awarded+' 个建筑';
+}else{
+G.consecutiveFails++;
+let refund=0;
+if(hasAb('E1'))refund+=4;
+if(hasAb('E4'))refund+=2*G.consecutiveFails;
+if(refund>0){G.copper+=refund;}
+/* 保底规则已删除（玩家裁决）：不再有强制保底机制；
+   初始建筑改为第 1 波备战开始时由系统赠送 1 个基础塔，保证首波可玩。 */
+$('slot-result-text').textContent='未中奖'+(refund>0?'（返还 '+refund+' 铜钱）':'');
+}
+$('slot-copper').textContent=G.copper;renderHUD();
+}
+function awardBuilding(id){
+const empty=G.board.findIndex(b=>!b);
+const item={id,star:0};
+if(empty!==-1)G.board[empty]=item;else G.reserve.push(item);
+G.stats.builds++;
+renderBoard();
+}
+/* 列下移 */
+function nudge(col){
+if(G.nudgeUsed>=G.nudgeMax){toast('本波下移次数已用完');return;}
+G.nudgeUsed++;
+const r=G.reels[col];
+G.reels[col]=[r[3],r[0],r[1],weightedSymbol(getCurrentWeights())];
+/* 重新结算受影响的线（该列所在的所有线） */
+clearWins();G.linesWon=[];let awarded=0;
+for(const line of PAYLINES){
+if(!line.some(i=>i%3===col))continue; /* 只查包含该列的线 */
+const s=reelCell(line[0]);
+if(reelCell(line[1])===s&&reelCell(line[2])===s){G.linesWon.push(line);awardBuilding(s);awarded++;line.forEach(i=>cells(i).classList.add('win'));}
+}
+if(awarded>0){G.consecutiveFails=0;$('slot-result-text').textContent='⬇️ 下移 → 新增中奖线 ×'+awarded+'！';}
+else{$('slot-result-text').textContent='⬇️ 下移完成，未新增中奖线';}
+renderSlotGrid();updateNudgeBtns();
+}
+/* 中心交换
+ * 设计意图：每次"未中奖"时可用的保底调整——中奖后不允许再用。
+ * 故中奖状态（G.linesWon.length>0）下拦截，提示玩家先领取或等待下次机会。 */
+function toggleSwapMode(){
+if(G.swapUsed){toast('本波已用过中心交换，下波重置');return;}
+if(G.linesWon.length>0){toast('中奖时不可使用中心交换，请先领取奖励');return;}
+G.swapMode=!G.swapMode;
+document.querySelectorAll('#slot-grid .slot-cell').forEach((c,i)=>{
+c.classList.toggle('swap-target',G.swapMode&&i!==4);});
+if(G.swapMode)toast('点击要交换的外围格子');
+}
+/* 图标锁定（D3）：进入锁定模式后点击格子，锁定该格图标 */
+function toggleLockMode(){
+if(!hasAb('D3'))return;
+if(G.lockUsed){toast('本波已用过图标锁定');return;}
+G.lockMode=!G.lockMode;
+document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.toggle('lock-pick',G.lockMode));
+$('lock-hint').style.display=G.lockMode?'none':'';
+$('lock-status').textContent=G.lockMode?'请点击一个格子':'';
+renderLockRow();
+}
+function pickLockCell(idx){
+if(!G.lockMode||G.lockUsed)return;
+G.lockUsed=true;G.lockMode=false;G.lockedCell=idx;
+document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.remove('lock-pick'));
+$('lock-status').textContent='已锁定格子 #'+(idx+1)+'，下次抽取该格保留';
+$('lock-hint').style.display='';
+renderSlotGrid();renderLockRow();
+}
+function centerSwap(outerIdx){
+if(!G.swapMode||outerIdx===4)return;
+const r=G.reels;const col=outerIdx%3,row=Math.floor(outerIdx/3);
+const cCol=1,cRow=1;
+if(r[col][row]===r[cCol][cRow]){toast('两格图标相同，无法交换');return;}
+const tmp=r[col][row];r[col][row]=r[cCol][cRow];r[cCol][cRow]=tmp;
+G.swapUsed=true;G.swapMode=false;
+document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.remove('swap-target'));
+clearWins();G.linesWon=[];let awarded=0;
+for(const line of PAYLINES){
+const s=reelCell(line[0]);
+if(reelCell(line[1])===s&&reelCell(line[2])===s){G.linesWon.push(line);awardBuilding(s);awarded++;line.forEach(i=>cells(i).classList.add('win'));}
+}
+$('slot-result-text').textContent=awarded>0?'🔄 交换 → 新增中奖线 ×'+awarded+'！':'🔄 交换完成，未新增中奖线';
+renderSlotGrid();
+}
+function clearWins(){document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.remove('win'));}
+function renderSlotGrid(){
+if(!$('slot-grid').children.length){
+for(let i=0;i<9;i++){const c=document.createElement('div');c.className='slot-cell';
+c.addEventListener('click',()=>{
+if(G.lockMode)pickLockCell(i);
+else if(G.swapMode)centerSwap(i);
+});
+$('slot-grid').appendChild(c);}
+}
+for(let i=0;i<9;i++){const c=cells(i);const sym=reelCell(i);
+c.textContent=sym&&BUILDINGS[sym]?BUILDINGS[sym].icon:'❓';
+c.classList.toggle('locked',G.lockedCell===i);
+/* 中奖线高亮：根据 G.linesWon 精确判断，而非无脑清除 */
+const won=G.linesWon.some(line=>line.includes(i));
+c.classList.toggle('win',won);}
+updateNudgeBtns();
+}
+function renderLockRow(){
+const row=$('lock-row');
+/* 无 D3 或本波已用过 → 整行隐藏，避免误导 */
+const canLock=hasAb('D3')&&!G.lockUsed;
+row.style.display=canLock?'flex':'none';
+if(!canLock)return;
+if(!G.lockMode){$('btn-lock-mode').style.display='';$('lock-status').textContent='';}
+else{$('btn-lock-mode').style.display='none';$('lock-status').textContent='请点击一个格子';}
+$('lock-hint').style.display=G.lockMode?'none':'';
+}
+function updateNudgeBtns(){
+const locked=G.spinCount<=0; /* 未抽奖前锁定格子调整，防止跨波提前改动 reel */
+for(let col=0;col<3;col++){const b=$('nudge-'+col);if(b)b.disabled=locked||G.nudgeUsed>=G.nudgeMax||!G.reels||G.reels[0][0]==='❓';}
+}
+function showAdjustUI(){
+const locked=G.spinCount<=0; /* 未抽奖前不开放格子调整入口（列下移/中心交换） */
+$('btn-done-spin').style.display=locked?'none':'';
+/* 中心交换按钮：仅"未中奖"时显示（中奖后不可再用，符合保底调整的设计意图） */
+$('btn-swap-center').style.display=(!locked&&hasAb('D2')&&!G.swapUsed&&G.linesWon.length===0)?'':'none';
+}
+function renderProbPanel(){
+const w=getCurrentWeights();let sum=0;for(const k in w)sum+=w[k];
+let html='<b style="grid-column:1/3;color:#38bdf8">当前出现概率</b>';
+for(const k in w){html+='<span>'+BUILDINGS[k].icon+' '+BUILDINGS[k].name+'</span><span>'+(w[k]/sum*100).toFixed(1)+'%</span>';}
+$('prob-panel').innerHTML=html;
+}
+function renderAbilityList(){
+const list=$('ability-list');
+if(!G.ownedAbilities.length){list.textContent='暂无';return;}
+list.innerHTML='';
+G.ownedAbilities.forEach(id=>{
+const a=ABILITIES.find(x=>x.id===id);if(!a)return;
+const span=document.createElement('span');
+span.className='ab dir-'+a.dir;
+span.textContent=a.name;
+span.title=a.desc;
+list.appendChild(span);
+});
+}
+function renderHiddenPreview(){
+$('hidden-preview').innerHTML=hasAb('L4')&&G.reels&&G.reels[0][0]!=='❓'?
+[0,1,2].map(c=>'<span>⬇️ '+BUILDINGS[G.reels[c][3]].icon+'</span>').join(''):'';
+}
+
+/* ================= 波次流程 ================= */
+function startWave(){
+G.phase='prep';G.spinCount=0;G.nudgeUsed=0;G.nudgeMax=hasAb('L1')?2:1;G.lockUsed=false;G.lockedCell=-1;G.swapUsed=false;
+/* 注意：shopRefreshCount/investRefreshCount 故意不在此清零——刷新阶梯跨波累积、整局不重置，
+ * 仅在 newGame() 开局清零，以持续消化溢出金币(越刷越贵)。 */
+/* 每波开始重置触发器状态：火药车命中计数(hitN/lastTrig)、引雷针潮湿引爆计时(lastWetTrig)，
+ * 避免上一波残留导致新波开局秒爆。 */
+G.board.forEach(b=>{if(b&&BUILDINGS[b.id]&&BUILDINGS[b.id].trigger){b.hitN=0;b.lastTrig=0;b.lastWetTrig=0;}});
+G.buffs={fireDmg:1,fireSpd:1,waterDmg:1,waterSpd:1};
+G.leakedThisWave=0;G.killCopper=0;G.killGold=0;
+G.reels=null;G.linesWon=[];G.adjustMode=false;G.swapMode=false;G.swapUsed=false;G.lastWinSymbols=[];G.winStreak=0;
+/* 第 1 波备战开始时（抽取前）系统赠送 1 个基础塔，保证首波可玩 */
+if(G.wave===1&&G.board.every(b=>!b)&&!G.starterGranted){
+G.starterGranted=true;
+const gift={id:'archer',star:0};
+const empty=G.board.findIndex(b=>!b);
+if(empty!==-1)G.board[empty]=gift;
+toast('🎁 开局赠送：短弓 🏹 ×1 已放入九宫格');
+}
+banner('第 '+G.wave+' 波 · 备战');
+$('panel-label').textContent='备用建筑（不上阵，可拖入九宫格）';
+$('reserve').style.display='';$('skillbar').style.display='none';
+$('btn-slot').style.display='';$('btn-slot').disabled=false;$('btn-slot').style.opacity=1;$('btn-battle').style.display='';
+updateBattleBtn(); /* 根据是否可合成动态切换按钮文案 */
+$('synth-panel').style.display='none';
+$('btn-shop').style.display=G.wave>=2?'':'none';
+renderBoard();
+updateNudgeBtns(); /* 波初复位列下移按钮状态 */
+$('speed-row').style.display='none';
+/* 三选一已改为"通关奖励"：在 endWave() 完成该关结算后触发，此处不再触发 */
+}
+function banner(txt){const b=$('wave-banner');b.textContent=txt;b.style.opacity=1;setTimeout(()=>b.style.opacity=0,1600);}
+function startBattleSequence(){
+/* prep + 可合成 → 进入合成阶段(仅手动拖拽)；prep + 不可合成 → 直接开战；合成阶段点开战 → 直接开战 */
+if(G.phase==='prep'){if(canSynth()){enterSynthPhase();}else{finalizeSynthDirect();}return;}
+if(G.phase==='synth'){finalizeSynthDirect();return;}
+}
+/* 直接开战（跳过合成阶段） */
+function finalizeSynthDirect(){
+$('synth-panel').style.display='none';
+enterBattle();
+}
+function checkRecipes(){
+const all=[...G.board.map((b,i)=>b?{...b,src:'grid',pos:i}:null),...G.reserve.map((b,i)=>({...b,src:'reserve',pos:i}))].filter(Boolean);
+return RECIPES.map(r=>{
+const m1=all.filter(x=>x.id===r.mats[0]);
+const m2=all.filter(x=>x.id===r.mats[1]);
+const ok=m1.length>0&&m2.length>0;
+return{recipe:r,ok,m1:m1[0],m2:m2[0],count:Math.min(m1.length,m2.length)};
+});
+}
+/* 统计棋盘+暂存区中某建筑的总数量 */
+function allMatCount(id){
+return[...G.board,...G.reserve].filter(b=>b&&b.id===id).length;
+}
+/* 判断当前是否可【配方合成】（两种配方材料都在场）。升星为玩家自行拖动操作，不纳入此判定 */
+function canSynth(){
+for(const r of RECIPES){
+if(allMatCount(r.mats[0])>0&&allMatCount(r.mats[1])>0)return true;
+}
+return false;
+}
+/* 更新合成/战斗按钮状态（根据是否可合成动态切换） */
+function updateBattleBtn(){
+if(G.phase!=='prep')return;
+const btn=$('btn-battle');
+if(canSynth()){btn.textContent='🧬 合成';btn.className='btn btn-danger btn-sm';}
+else{btn.textContent='⚔️ 开始战斗';btn.className='btn btn-primary btn-sm';}
+}
+/* 渲染合成阶段面板（仅提示，无自动合成——已改为用户裁决的手动拖拽合成） */
+function renderSynthPanel(){
+if(G.phase!=='synth')return;
+const list=$('synth-list');list.innerHTML='';
+const avail=checkRecipes();
+const okRecipes=avail.filter(a=>a.ok);
+if(!okRecipes.length){
+list.innerHTML='<div class="synth-empty">当前没有可合成的配方。可继续拖动场上建筑调整位置，完成后点右侧按钮开战。</div>';
+}else{
+list.innerHTML='<div class="synth-empty" style="color:#22c55e">🔗 检测到可合成配方：拖动高亮的两种建筑到一起即可合成（高阶材料会自动重置返还等量0星件，<b>不消耗材料</b>）。也可拖动同名建筑升星。完成后点右侧按钮开战。</div>';
+}
+}
+/* 进入合成阶段：非阻塞面板，棋盘与备用区仍可拖拽/交换 */
+function enterSynthPhase(){
+G.phase='synth';
+const p=$('synth-panel');p.style.display='block';p.classList.remove('collapsed');
+$('btn-synth-collapse').textContent='收起 ▾';
+$('btn-slot').disabled=true;$('btn-slot').style.opacity=.4;
+$('btn-battle').textContent='⚔️ 开始战斗';
+renderSynthPanel();
+renderBoard(); /* 刷新九宫格，确保拖拽/换位入口可用 */
+highlightSynthTargets(); /* #4 高亮可合成/升星建筑 */
+toast('🧬 拖动建筑合成/升星（不消耗材料），可随时调整位置后开战');
+}
+/* #4 高亮可配方合成的建筑（仅当某配方的两种材料均在地格/暂存时，对应材料地格才高亮；升星为玩家自行操作，不高亮） */
+function highlightSynthTargets(){
+document.querySelectorAll('.cell,.res-item').forEach(el=>el.classList.remove('synth-highlight'));
+if(G.phase!=='synth')return;
+const all=[...G.board.map((b,i)=>b?{...b,src:'grid',pos:i,el:gridEl.children[i]}:null),...G.reserve.map((b,i)=>({...b,src:'reserve',pos:i,el:reserveEl.children[i]}))].filter(Boolean);
+/* 合成高亮：仅当同一配方的两种材料均在场时，标亮该配方的两种材料 */
+for(const r of RECIPES){
+if(allMatCount(r.mats[0])>0&&allMatCount(r.mats[1])>0){
+all.filter(b=>b.id===r.mats[0]||b.id===r.mats[1]).forEach(b=>b.el.classList.add('synth-highlight'));
+}
+}
+}
+/* 自动合成已按用户裁决删除——合成仅支持手动拖拽（见 handleDrop）。此处仅保留开战入口。 */
+function updateSpeedBtns(){
+for(const m of [1,2,4]){const b=$('speed-'+m);if(b)b.classList.toggle('speed-active',G.battleSpeed===m);}
+}
+function enterBattle(){
+$('synth-panel').style.display='none';
+document.querySelectorAll('.synth-highlight').forEach(el=>el.classList.remove('synth-highlight')); /* 清除合成高亮 */
+G.phase='battle';
+$('panel-label').textContent='战术技能（点击释放）';
+$('reserve').style.display='none';$('skillbar').style.display='';
+$('btn-slot').style.display='none';$('btn-battle').style.display='none';$('btn-shop').style.display='none';
+renderSkillbar();
+$('speed-row').style.display='flex';G.battleSpeed=1;updateSpeedBtns();
+/* 生成波次敌队列 */
+const w=WAVES[G.wave-1];G.spawnQueue=[];
+['normal','fast','tanky','stealth'].forEach(t=>{for(let i=0;i<(w[t]||0);i++)G.spawnQueue.push(t);});
+/* 打乱 */
+for(let i=G.spawnQueue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[G.spawnQueue[i],G.spawnQueue[j]]=[G.spawnQueue[j],G.spawnQueue[i]];}
+if(w.boss)G.spawnQueue.push('boss');
+G.spawnTimer=0;G.spawnInterval=Math.max(1.0,1.5-(G.wave-1)*.06);
+banner('⚔️ 第 '+G.wave+' 波 · 战斗开始');
+$('boss-bar-text').textContent=w.boss?BOSSES[w.boss].name+' 血量':'战场';
+if(w.boss){const b=BOSSES[w.boss];$('boss-bar-fill').style.width='100%';}
+else $('boss-bar-fill').style.width='0%';
+renderHUD();
+}
+/* ================= 战斗循环 ================= */
+function gameLoop(ts){
+if(!G||G.over)return;
+const dt=Math.min((ts-lastTime)/1000,.05)*G.battleSpeed;lastTime=ts;
+if(G.phase==='battle')updateBattle(dt);
+rAF=requestAnimationFrame(gameLoop);
+}
+function updateBattle(dt){
+/* 自带输出的辅助建筑：火药车(selfBoom)每10秒灼烧同列、引雷针(selfRain)每10秒落雷随机敌人。
+ * 这类建筑 dmg:0 不走 towerFire，需在此独立计时触发，符合"不依赖命中/邻居也能输出"的定位。 */
+if(G.phase==='battle'){
+const cw=bfEl.clientWidth;
+G.board.forEach((b,idx)=>{
+if(!b)return;const cfg=BUILDINGS[b.id];if(!cfg)return;
+if(cfg.selfBoom){b.boomT=(b.boomT||0)+dt;if(b.boomT>=10){b.boomT=0;
+const col=idx%3;const cx=cw*(.2+col*.3);
+G.enemies.forEach(e=>{if(!e.phased&&Math.abs(e.xPx-cx)<cw*.2)hitEnemy(e,e.maxHp*cfg.selfBoom.hpRate);});
+flash('💣');log('💣 火药车持续灼烧同列！');}}
+if(cfg.selfRain){b.rainT=(b.rainT||0)+dt;if(b.rainT>=10){b.rainT=0;
+const valid=G.enemies.filter(e=>!e.phased);
+if(valid.length){const t=valid[Math.floor(Math.random()*valid.length)];
+hitEnemy(t,t.wet?t.maxHp*cfg.selfRain.rate*2:t.maxHp*cfg.selfRain.rate,t.wet?'paralyze':'');
+flash('⚡');log('🗼 引雷针落雷！'+(t.wet?'潮湿暴击':''));}}}
+});
+/* 引雷针🗼「潮湿放大器」：统计场上潮湿敌人数，每 WET_PER_BOLT 个潮湿敌降下1道全屏落雷，
+ * 由水炮💧挂的潮湿驱动——潮湿越多落雷越密，形成"💧挂潮湿→🗼放大→🌊增益水流"闭环。
+ * intervalMs 为最小间隔(防一帧爆满)，无潮湿敌时退化等待(靠 selfRain 兜底输出)。 */
+const WET_PER_BOLT=3;const NEEDLE_INTERVAL_MS=8000;const nowT=performance.now();
+G.board.forEach((b)=>{
+if(!b)return;const cfg=BUILDINGS[b.id];
+if(!cfg||cfg.trigger!=='lightning')return; /* 只处理引雷针 */
+const wetN=G.enemies.filter(e=>e.wet).length;
+if(wetN<WET_PER_BOLT)return; /* 潮湿不足，暂不引爆 */
+const bolts=Math.floor(wetN/WET_PER_BOLT);
+if(nowT-(b.lastWetTrig||0)<NEEDLE_INTERVAL_MS)return; /* 间隔未到 */
+b.lastWetTrig=nowT;
+const dmg=cfg.trigDmg*STAR_MULT[b.star];
+for(let i=0;i<bolts;i++){setTimeout(()=>{
+G.enemies.forEach(e=>{let d=dmg;if(e.isBoss)d=dmg;hitEnemy(e,e.wet?d*2:d,e.wet?'paralyze':'');});
+flash('⚡');log('🗼 引雷针感应潮湿('+wetN+'个)降下全屏落雷！'+(G.enemies.some(e=>e.wet)?'潮湿暴击！':''));
+},i*150);}
+toast('🗼 潮湿引雷！×'+bolts);
+});
+}
+/* 生成 */
+if(G.spawnQueue.length>0){
+G.spawnTimer+=dt;
+if(G.spawnTimer>=G.spawnInterval){G.spawnTimer=0;spawnEnemy(G.spawnQueue.shift());}
+}
+/* 冻结 */
+if(G.freezeTimer>0){G.freezeTimer-=dt;}
+const spdMult=G.freezeTimer>0?0:1;
+/* 敌人更新 */
+for(let i=G.enemies.length-1;i>=0;i--){
+const e=G.enemies[i];
+/* 隐匿怪相位 */
+if(e.type==='stealth'){e.phaseTimer+=dt;if(e.phaseTimer>4.5){e.phaseTimer=0;}
+e.phased=e.phaseTimer>3.5;e.el.classList.toggle('phased',e.phased);}
+/* Boss 机制 */
+if(e.isBoss){
+if(e.shield){e.shieldTimer+=dt;if(e.shieldTimer>10){e.shieldTimer=0;e.shielded=true;e.el.classList.add('shielded');setTimeout(()=>{e.shielded=false;e.el.classList.remove('shielded');},3000);}}
+if(e.summon){e.summonTimer+=dt;if(e.summonTimer>5){e.summonTimer=0;spawnEnemy('normal');spawnEnemy('normal');log('🧟 召唤领主召唤了援军！');}}
+if(e.enrage&&!e.enraged&&e.hp<e.maxHp*.3){e.enraged=true;e.speed*=2;log('😈 狂暴魔王狂暴了！移速翻倍！');}
+$('boss-bar-fill').style.width=Math.max(0,e.hp/e.maxHp*100)+'%';
+}
+/* 移动 */
+e.y+=e.speed*spdMult*dt;
+e.el.style.top=e.y+'%';
+e.yPx=e.y/100*bfEl.clientHeight;
+/* 漏怪 */
+if(e.y>100){removeEnemy(i,true);
+/* Boss 漏过 = 直接判负（用户裁决：任一 Boss 突破防线即防线失守，不再扣血硬撑；
+ * 删除旧的 ===3 硬编码特例，对所有 Boss 统一判负） */
+if(e.isBoss){
+  $('boss-bar-fill').style.width='0%';$('boss-bar-text').textContent='已漏过';
+  toast('💀 Boss 突破防线！防线失守！');
+  gameOver(false);return;
+}
+/* 普通怪漏过：基地 -1 血（血量全局共享） */
+G.baseHP-=1;G.leakedThisWave++;G.stats.leaks++;
+toast('💥 敌人突破防线！基地 -1');
+renderHUD();
+if(G.baseHP<=0){gameOver(false);return;}
+continue;
+}
+}
+/* 塔攻击 */
+G.board.forEach((b,idx)=>{if(b)towerFire(idx,b,dt);});
+/* 子弹 */
+for(let i=G.bullets.length-1;i>=0;i--){
+const bl=G.bullets[i];
+if(!bl.target||!G.enemies.includes(bl.target)){bl.el.remove();G.bullets.splice(i,1);continue;}
+const dx=bl.target.xPx-bl.x,dy=bl.target.yPx-bl.y;const dist=Math.hypot(dx,dy);
+if(dist<14){hitEnemy(bl.target,bl.damage,bl.special);bl.el.remove();G.bullets.splice(i,1);}
+else{bl.x+=dx/dist*bl.speed*dt;bl.y+=dy/dist*bl.speed*dt;bl.el.style.left=bl.x+'px';bl.el.style.top=bl.y+'px';}
+}
+/* 敌人死亡在 hitEnemy 中处理 */
+/* 波次结束判断 */
+if(G.spawnQueue.length===0&&G.enemies.length===0&&G.phase==='battle'){endWave();}
+}
+function spawnEnemy(type){
+const el=document.createElement('div');
+let e;
+if(type==='boss'){
+const b=BOSSES[WAVES[G.wave-1].boss];
+el.className='enemy boss';el.textContent=b.icon;
+const x=50;e={el,type:'boss',isBoss:true,bossNo:WAVES[G.wave-1].boss,x:x,y:-5,hp:b.hp,maxHp:b.hp,speed:b.speed,
+shield:b.shield,shieldTimer:5,summon:b.summon,summonTimer:0,enrage:b.enrage,enraged:false,phaseTimer:0};
+el.style.left=x+'%';
+log('‼️ '+b.name+' 降临！');
+toast('‼️ '+b.name+' 降临！');
+}else{
+const t=ENEMY_TYPES[type];el.className='enemy';el.textContent=t.icon;
+const x=8+Math.random()*84;
+const _hpMult=(CONFIG.waves[G.wave-1]&&CONFIG.waves[G.wave-1].hpMult)||Math.pow(1.22,G.wave-1); /* 兜底难度曲线：与 CONFIG.waves.hpMult 同坡度，后期更陡以消耗金币 */
+const hp=t.hp*_hpMult;
+e={el,type,x:x,y:-4,hp:hp,maxHp:hp,speed:t.speed,phaseTimer:0,phased:false};
+el.style.left=x+'%';
+}
+e.xPx=0;e.yPx=0;updateEnemyPx(e);
+el.style.top=e.y+'%';
+bfEl.appendChild(el);G.enemies.push(e);
+}
+function updateEnemyPx(e){
+e.xPx=e.x/100*bfEl.clientWidth;e.yPx=e.y/100*bfEl.clientHeight;
+e.el.style.left=e.x+'%';e.el.style.top=e.y+'%';
+}
+function removeEnemy(i,leaked){
+const e=G.enemies[i];e.el.remove();G.enemies.splice(i,1);
+if(G.bossRef===e)G.bossRef=null;
+}
+function hitEnemy(e,damage,special){
+if(e.phased)return; /* 隐匿免伤 */
+if(e.shielded)damage*=.5;
+e.hp-=damage;
+if(special==='wet'){e.wet=2;}
+if(special==='paralyze'){e.paralyzed=.5;}
+if(special==='burn'){e.burnT=3;}
+if(e.hp<=0){
+const idx=G.enemies.indexOf(e);
+if(idx>-1){
+e.el.textContent='💥';setTimeout(()=>e.el.remove(),200);
+G.enemies.splice(idx,1);
+G.stats.kills++;
+if(e.isBoss){const _kc=CONFIG.economy.copper.killBoss,_kg=CONFIG.economy.gold.killBoss;
+G.killCopper+=_kc;G.killGold+=_kg;toast('🏆 击败 '+BOSSES[e.bossNo].name+'！+'+_kc+'铜 +'+_kg+'金');
+$('boss-bar-fill').style.width='0%';$('boss-bar-text').textContent='已击败';}
+else{G.killCopper+=CONFIG.economy.copper.killNormal;}
+renderHUD();
+}
+}
+}
+/* ================= 塔攻击逻辑（邻接/射程/目标） ================= */
+function getNeighbors(idx){
+const n=[];const r=Math.floor(idx/3),c=idx%3;
+if(r>0)n.push(idx-3);if(r<2)n.push(idx+3);if(c>0)n.push(idx-1);if(c<2)n.push(idx+1);
+return n;
+}
+function towerCombatStats(idx){
+const b=G.board[idx];const base=BUILDINGS[b.id];const sm=STAR_MULT[b.star];
+/* 索敌数(主目标)：single/chain/pierce/aoe 均为"至少有1个主目标"的特殊攻击类型；
+ * 用户裁决+工程修复：原先 base.single?1:0 使 chain/pierce/aoe 类(线圈⚡、雷暴塔🌩️、投石机🪨)
+ * 沦为 targets=0 → slice(0,0)空 → 永不攻击。改为"有任何攻击标记即索敌1主目标"，
+ * chain/pierce 的额外目标由各自分支单独处理，prism 靠 targets++ 叠加。 */
+let dmg=(base.dmg||0)*sm,cd=base.cd||9999,range=(base.range||0);
+let targets=(base.single||base.chain||base.pierce||base.aoe)?1:1;
+let isFire=!!base.fire;
+for(const ni of getNeighbors(idx)){
+const nb=G.board[ni];if(!nb)continue;const nsm=STAR_MULT[nb.star];
+if(nb.id==='firebasin'&&b.id==='archer'){dmg*=2*nsm;isFire=true;}
+if(nb.id==='smith'){cd=cd/(1+.3*nsm);}
+if(nb.id==='prism'&&base.single){dmg*=1+.2*nsm;targets++;} /* 射程门槛已移除，改为伤害增益 */
+if(nb.id==='tank'&&base.school==='water'){dmg*=1+.15*nsm;} /* 储能水槽：相邻雷水流建筑伤害+15%/星 */
+}
+/* 技能增益 */
+const sch=base.school;
+if(sch==='fire'){dmg*=G.buffs.fireDmg;cd/=G.buffs.fireSpd;}
+else{dmg*=G.buffs.waterDmg;cd/=G.buffs.waterSpd;}
+return{dmg,cd,range,targets:Math.max(targets,1),isFire,isLightning:!!base.lightning,base};
+}
+function towerFire(idx,b,dt){
+const st=towerCombatStats(idx);
+if(!st.base.dmg)return;
+b.fireT=(b.fireT||0)+dt*1000;
+if(b.fireT<st.cd)return;
+b.fireT=0;
+/* 发射位置：列对应底部 */
+const col=idx%3;const fw=bfEl.clientWidth;const fh=bfEl.clientHeight;
+const fx=fw*(.2+col*.3),fy=fh;
+/* 目标：全场未隐匿敌人，越靠近基地（y 越大）越优先 */
+const candidates=G.enemies.filter(e=>!e.phased);
+if(candidates.length===0)return;
+candidates.sort((a,b2)=>b2.y-a.y);
+/* 魔力棱镜：相邻单体塔(single)额外+1主目标（desc"多打1目标"在此落地） */
+let extraTargets=0;
+if(st.base.single)for(const ni of getNeighbors(idx)){const nb=G.board[ni];if(nb&&nb.id==='prism'){extraTargets+=STAR_MULT[nb.star];}}
+const targets=candidates.slice(0,st.targets+extraTargets);
+/* 储能水槽：相邻线圈，对主目标周围一圈追加环形溅射（圆心跟随目标实际位置） */
+if(b.id==='coil'){
+for(const ni of getNeighbors(idx)){
+const nb=G.board[ni];
+if(nb&&nb.id==='tank'){
+const splashDmg=12*STAR_MULT[nb.star];
+const tc=targets[0];
+G.enemies.forEach(e=>{if(!e.phased&&Math.hypot(e.xPx-tc.xPx,e.yPx-tc.yPx)<=fh*.2+50)hitEnemy(e,splashDmg);});
+break;
+}
+}
+}
+targets.forEach(t=>{
+/* 穿透水刀：瞬发竖线 */
+if(st.base.pierce){
+hitEnemy(t,st.dmg,'paralyze');
+G.enemies.forEach(e=>{if(e!==t&&!e.phased&&Math.abs(e.xPx-fx)<fw*.08)hitEnemy(e,st.dmg,'paralyze');});
+drawBeam(fx,b.id);
+}
+/* 闪电链：瞬发 */
+else if(st.base.chain){
+hitEnemy(t,st.dmg,'');
+const others=G.enemies.filter(e=>e!==t&&!e.phased).sort((a,b2)=>Math.hypot(a.xPx-t.xPx,a.yPx-t.yPx)-Math.hypot(b2.xPx-t.xPx,b2.yPx-t.yPx));
+if(others[0])hitEnemy(others[0],st.dmg*.7);
+if(others[1])hitEnemy(others[1],st.dmg*.49);
+drawLightning(fx,t);
+}
+/* 投石机：AoE 弹道 */
+else{
+const bl={x:fx,y:fy,target:t,speed:450,damage:st.dmg,el:document.createElement('div'),special:'',aoe:st.base.aoe};
+bl.el.className='bullet';if(st.isFire)bl.el.classList.add('fire');
+if(b.id==='waterTower')bl.el.classList.add('water'),bl.special='wet';
+if(st.base.burn)bl.special='burn';
+bl.el.style.left=fx+'px';bl.el.style.top=fy+'px';
+bfEl.appendChild(bl.el);G.bullets.push(bl);
+}
+});
+/* 触发器检查：同列火箭/闪电 */
+checkTriggers(idx,st.isFire||st.isLightning,st);
+}
+function checkTriggers(idx,isType,st){
+const col=idx%3;
+G.board.forEach((b,j)=>{
+if(!b)return;
+const cfg=BUILDINGS[b.id];
+if(!cfg.trigger)return;
+if(j%3!==col)return;
+if(cfg.trigger==='fire'&&!st.isFire)return;
+/* 注意：引雷针🗼(trigger==='lightning')不再走同列命中计数——它已改为"潮湿放大器"，
+ * 全屏落雷由 updateBattle 按场上潮湿敌人数独立引爆，避免被雷暴塔高频贯穿喂爆。 */
+if(cfg.trigger==='lightning')return;
+const now=performance.now();
+/* 火药车💣命中计数制：同列每 trigHits 次火焰命中引爆，trigCdMs 兜底(防命中稀疏永不爆)。 */
+b.hitN=(b.hitN||0)+1;
+const need=cfg.trigHits||3;const cdMs=cfg.trigCdMs||5000;
+const byHits=b.hitN>=need;
+const byCd=(now-(b.lastTrig||0))>=cdMs;
+if(!byHits&&!byCd)return; /* 既没攒满命中、也未到兜底时间 → 暂不引爆 */
+b.hitN=0;b.lastTrig=now;
+const dmg=cfg.trigDmg*STAR_MULT[b.star];
+setTimeout(()=>{
+G.enemies.forEach(e=>{hitEnemy(e,e.isBoss?dmg*.5:dmg);});
+flash('💥');log('💣 火药车爆炸！全屏 '+Math.round(dmg)+' 伤害');
+toast('💣 火药车全屏爆炸！');
+},600);
+});
+}
+function drawBeam(fx,srcId){
+const el=document.createElement('div');el.className='fx-beam';
+el.style.left=(fx-5)+'px';el.style.top='0px';el.style.height=bfEl.clientHeight+'px';
+bfEl.appendChild(el);setTimeout(()=>el.remove(),200);
+}
+function drawLightning(fx,target){
+const el=document.createElement('div');el.className='fx-line';
+el.style.left=Math.min(fx,target.xPx)+'px';el.style.top=target.yPx+'px';
+el.style.width=Math.abs(target.xPx-fx)+'px';
+bfEl.appendChild(el);setTimeout(()=>el.remove(),150);
+}
+function flash(icon){
+const el=document.createElement('div');el.className='fx-boom';el.textContent=icon;
+el.style.left='50%';el.style.top='50%';bfEl.appendChild(el);setTimeout(()=>el.remove(),500);
+}
+
+/* ================= 波次结算 ================= */
+function endWave(){
+G.phase='settle';
+const _cfg=CONFIG.waves[G.wave-1];
+/* 通关奖励判定：完成当前关后，若本关 rewardBuild=1 且下一关(id>=3)已开放三选一，则结算后弹一次三选一 */
+const willReward=!!(_cfg&&_cfg.rewardBuild===1)&&((G.wave+1)>=3);
+/* 资源波：无战斗，直接发放补给后进入下一波 */
+if(_cfg&&_cfg.type==='resource'){
+  const bc=_cfg.bonusCopper||0,bg=_cfg.bonusGold||0;
+  G.copper+=bc;G.gold+=bg;
+  log('💰 资源补给波：铜钱+'+bc+' 金币+'+bg+'（无战斗）');
+  renderHUD();
+  if(G.wave>=totalWaveNodes()){gameOver(true);return;}
+  setTimeout(()=>{banner('✅ 资源补给完成');setTimeout(()=>{G.wave++;if(willReward)openInvest();startWave();},1200);},400);
+  return;
+}
+/* 收入结算：全部从 CONFIG.economy 读取，无硬编码。
+ *  - 铜钱：基础随波次递增(perWaveBase + wave*perWaveScale) + 击杀掉落。
+ *  - 金币：按本波节点类型(goldPerTier)发放 + Boss击杀掉落；普通波几乎无金币。 */
+const _ec=CONFIG.economy;
+const _w=G.wave;
+const _tier=(_cfg&&_cfg.type)?_cfg.type:'normal'; /* elite/boss/normal，缺省按普通 */
+let copper=_ec.copper.perWaveBase+_w*_ec.copper.perWaveScale+G.killCopper;
+let gold=(_ec.gold.perTier[_tier]||0)+G.killGold;
+G.copper+=copper;G.gold+=gold;
+G.killCopper=0;G.killGold=0;
+log('📊 第 '+G.wave+' 波结束('+_tier+')：铜钱+'+copper+' 金币+'+gold);
+renderHUD();
+if(G.wave>=totalWaveNodes()){gameOver(true);return;}
+/* 显示结算面板后进入下一波；通关奖励的三选一在进下一波前弹出（作为本关奖励） */
+setTimeout(()=>{
+banner('✅ 第 '+G.wave+' 波完成'+(willReward?'　🎰 获得一次老虎机升级选择！':''));
+setTimeout(()=>{G.wave++;if(willReward)openInvest();startWave();},1800);
+},600);
+}
+
+/* ================= 技能 ================= */
+function renderSkillbar(){
+const bar=$('skillbar');bar.innerHTML='';
+const owned=Object.keys(G.skills).filter(k=>G.skills[k]>0);
+if(!owned.length){bar.innerHTML='<span style="color:#475569;font-size:12px;padding:8px">（无技能，可在商店购买）</span>';return;}
+owned.forEach(k=>{
+const s=SKILLS[k];const btn=document.createElement('button');
+btn.className='skill-btn';btn.innerHTML=s.icon+'<span class="cnt">'+G.skills[k]+'</span>';
+btn.title=s.name+'：'+s.desc;
+btn.addEventListener('click',()=>useSkill(k));
+bar.appendChild(btn);
+});
+}
+function useSkill(k){
+if(G.phase!=='battle'||G.skills[k]<=0)return;
+G.skills[k]--;
+renderSkillbar();
+const s=SKILLS[k];
+if(k==='freeze'){G.freezeTimer=3;toast('❄️ 绝对零度！全军冻结 3 秒');log('❄️ 冻结全场');G.enemies.forEach(e=>e.el.classList.add('frozen'));
+setTimeout(()=>G.enemies.forEach(e=>e.el.classList.remove('frozen')),3000);}
+else if(k==='strike'){G.enemies.forEach(e=>hitEnemy(e,250));toast('🧨 毁灭打击！全场 250 伤害');log('🧨 毁灭打击');flash('🧨');}
+else if(s.buff){
+const key=s.buff.school==='fire'?(s.buff.stat==='dmg'?'fireDmg':'fireSpd'):(s.buff.stat==='dmg'?'waterDmg':'waterSpd');
+G.buffs[key]+=s.buff.v;
+toast(s.icon+' '+s.name+'！'+s.desc);log(s.icon+' '+s.name+' 生效');
+}
+}
+
+/* ================= 商店 ================= */
+function openShop(){
+$('modal-shop').classList.add('active');
+$('shop-gold').textContent=G.gold;
+renderShop();updateShopRefreshUI();
+}
+/* 刷新按钮文案+可用性随阶梯实时刷新 */
+function updateShopRefreshUI(){
+const tiers=CONFIG.economy.refreshTiers;
+const rc=tiers[Math.min(G.shopRefreshCount,tiers.length-1)];
+$('shop-refresh-cost').textContent=rc;
+$('btn-shop-refresh').textContent='🔄 刷新（'+rc+' 金币）';
+$('btn-shop-refresh').disabled=G.gold<rc;
+}
+function renderShop(){
+const all=Object.keys(SKILLS);
+const offers=G.shopOffers.length?G.shopOffers:pickRandom(all,4);
+G.shopOffers=offers;
+const list=$('shop-list');list.innerHTML='';
+const carried=Object.values(G.skills).reduce((a,b)=>a+b,0);
+$('shop-carry').textContent=carried;
+/* 血包：常驻候选，排在技能列表最前。即时消耗品，不占携带栏；满血时禁购。 */
+const mk=CONFIG.economy.medkit;
+const hpFull=G.baseHP>=10; /* 基地血量上限=10(见 newGame.baseHP 初值)，满血判定 */
+const mkDiv=document.createElement('div');mkDiv.className='shop-item';
+mkDiv.innerHTML='<div class="icon">'+mk.icon+'</div><div class="info"><div class="nm">【'+mk.name+'】('+mk.heal+' 血)</div><div class="ds">'+mk.note+'</div></div>'
++'<div style="text-align:right"><div class="price">'+mk.cost+' 🪙</div><button class="btn btn-sm '+(G.gold<mk.cost||hpFull?'btn-secondary':'btn-primary')+'" data-reason="'+(hpFull?'full':'')+'">'+(hpFull?'已满':'购买')+'</button></div>';
+mkDiv.querySelector('button').addEventListener('click',()=>{
+if(G.gold<mk.cost){toast('💰 金币不足（需要 '+mk.cost+'，当前 '+G.gold+'）');return;}
+if(G.baseHP>=10){toast('❤️ 血量已满，无需使用血包');return;}
+G.gold-=mk.cost;G.baseHP=Math.min(G.baseHP+mk.heal,10);
+$('shop-gold').textContent=G.gold;renderHUD();renderShop();
+toast('🩹 使用血包，基地血量 +'+mk.heal+'（当前 '+G.baseHP+'/10）');
+});
+list.appendChild(mkDiv);
+offers.forEach(k=>{
+const s=SKILLS[k];
+const owned=G.skills[k]||0;
+const atCap=owned>=2||carried>=4;
+const cant=G.gold<s.cost||atCap;
+/* 作用于：流派 + 具体建筑清单 */
+let scope;
+if(s.buff){
+const schoolBuildings=Object.values(BUILDINGS).filter(b=>b.school===s.buff.school);
+const names=schoolBuildings.map(b=>b.icon).join('');
+scope='作用于：'+(s.buff.school==='fire'?'<span style="color:#fbbf24">🔥 火药流</span>':'<span style="color:#7dd3fc">💧 雷水流</span>')+' '+names+'（'+schoolBuildings.map(b=>b.name).join('、')+'），<b>'+(s.buff.stat==='dmg'?'攻击力':'攻速')+'+'+Math.round(s.buff.v*100)+'%</b>';
+}else{
+scope='作用于：<b>全场所有敌人</b>';
+}
+/* #7 禁用原因提示：不再disabled，改为点击后toast */
+let reason='';
+if(G.gold<s.cost)reason='gold';
+else if(owned>=2)reason='cap-single';
+else if(carried>=4)reason='cap-total';
+const div=document.createElement('div');div.className='shop-item';
+div.innerHTML='<div class="icon">'+s.icon+'</div><div class="info"><div class="nm">'+s.name+'（'+owned+'/2）</div><div class="ds">'+s.desc+'</div><div class="ds" style="margin-top:2px">'+scope+'</div></div>'
++'<div style="text-align:right"><div class="price">'+s.cost+' 🪙</div><button class="btn btn-sm '+(cant?'btn-secondary':'btn-primary')+'" data-reason="'+reason+'">'+(cant?'已满':'购买')+'</button></div>';
+div.querySelector('button').addEventListener('click',()=>{
+if(G.gold<s.cost){toast('💰 金币不足（需要 '+s.cost+'，当前 '+G.gold+'）');return;}
+if((G.skills[k]||0)>=2){toast('📦 该技能已达携带上限（2），无法再购');return;}
+if(carried>=4){toast('🎒 携带栏已满（4/4），请先使用技能腾出空间');return;}
+if((G.skills[k]||0)>=2){toast('该技能已达携带上限');return;}
+if(carried>=4){toast('总携带已达上限（4）');return;}
+G.gold-=s.cost;G.skills[k]=(G.skills[k]||0)+1;
+$('shop-gold').textContent=G.gold;renderHUD();renderShop();renderSkillbar();
+toast('✅ 已购买【'+s.name+'】');
+});
+list.appendChild(div);
+});
+}
+function pickRandom(arr,n){const a=[...arr];const out=[];while(out.length<n&&a.length){out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]);}return out;}
+
+/* ================= 老虎机投资 ================= */
+function openInvest(){
+G.investCount++;
+const unowned=ABILITIES.filter(a=>!G.ownedAbilities.includes(a.id));
+if(unowned.length===0){toast('老虎机能力已全部获得');return;}
+G.investOffers=pickRandom(unowned,Math.min(3,unowned.length));
+/* 稀有度加权已在 pickRandom 均匀处理，简化首版 */
+$('invest-gold').textContent=G.gold;
+renderInvest();updateInvestRefreshUI();
+$('modal-invest').classList.add('active');
+}
+/* 投资刷新按钮文案+可用性随阶梯实时刷新 */
+function updateInvestRefreshUI(){
+const tiers=CONFIG.economy.refreshTiers;
+const rc=tiers[Math.min(G.investRefreshCount,tiers.length-1)];
+const costEl=$('invest-refresh-cost'), btn=$('btn-invest-refresh');
+if(!costEl||!btn)return; /* DOM 缺失(如旧缓存/未渲染)时优雅降级，不阻断结算流程 */
+costEl.textContent=rc;
+btn.textContent='🔄 刷新（'+rc+' 金币）';
+btn.disabled=G.gold<rc;
+}
+function renderInvest(){
+const list=$('invest-list');list.innerHTML='';
+/* #5 已拥有能力区域 */
+if(G.ownedAbilities.length){
+const ownedDiv=document.createElement('div');ownedDiv.id='invest-owned';
+ownedDiv.innerHTML='<div style="font-size:12px;color:#94a3b8;margin-bottom:6px">已拥有能力（'+G.ownedAbilities.length+'）：</div>';
+G.ownedAbilities.forEach(id=>{
+const a=ABILITIES.find(x=>x.id===id);if(!a)return;
+const card=document.createElement('div');card.className='invest-card owned-card';
+card.style.opacity='.75';card.style.borderLeft='3px solid #22c55e';
+card.innerHTML='<div class="nm">✅ '+a.name+'</div><div class="ds">'+a.desc+'</div>'
++'<div class="rar rar-'+a.rar+'">'+'★'.repeat(a.rar==='common'?1:a.rar==='uncommon'?2:3)+' '+({common:'常见',uncommon:'稀有',epic:'史诗'})[a.rar]+'</div>';
+card.addEventListener('click',()=>toast(a.name+'：'+a.desc));
+ownedDiv.appendChild(card);
+});
+list.appendChild(ownedDiv);
+const sep=document.createElement('div');sep.style.cssText='border-top:1px solid #334155;margin:8px 0';list.appendChild(sep);
+}
+/* 候选三选一 */
+const hdr=document.createElement('div');hdr.innerHTML='<div style="font-size:13px;color:#fbbf24;margin-bottom:6px">选择 1 个新能力（三选一）：</div>';list.appendChild(hdr);
+G.investOffers.forEach(a=>{
+const div=document.createElement('div');div.className='invest-card';
+div.innerHTML='<div class="nm">'+a.name+'</div><div class="ds">'+a.desc+'</div><div class="rar rar-'+a.rar+'">'+'★'.repeat(a.rar==='common'?1:a.rar==='uncommon'?2:3)+' '+({common:'常见',uncommon:'稀有',epic:'史诗'})[a.rar]+' · '+({economy:'聚财流',direction:'定向流',streak:'爆发流'})[a.dir]+'</div>';
+div.addEventListener('click',()=>pickAbility(a.id));
+list.appendChild(div);
+});
+}
+function pickAbility(id){
+G.ownedAbilities.push(id);
+G.stats.investPath.push(id);
+const a=ABILITIES.find(x=>x.id===id);
+toast('🎰 获得能力【'+a.name+'】');
+if(id==='L1')G.nudgeMax=2;
+$('modal-invest').classList.remove('active');
+/* D1/D4：获得后立即让玩家手动选择目标建筑 */
+if(id==='D1'||id==='D4'){setTimeout(openTargetPicker,300);}
+}
+/* 定向流叠加修复：D1(+1) 与 D4(+2) 可累加，上限 clamp 到 3 种建筑 */
+function targetMax(){const n=(hasAb('D1')?1:0)+(hasAb('D4')?2:0);return Math.min(n,3);}
+function renderTargetRow(){
+const row=$('target-row');const max=targetMax();
+if(max===0){row.style.display='none';return;}
+row.style.display='flex';
+const icons=$('target-icons');icons.innerHTML='';
+if(!G.targetSymbols.length){icons.innerHTML='<span style="color:#64748b">未指定</span>';}
+else G.targetSymbols.forEach(t=>{if(BUILDINGS[t])icons.insertAdjacentHTML('beforeend','<span class="tgt-icon">'+BUILDINGS[t].icon+'</span>');});
+}
+function openTargetPicker(){
+const max=targetMax();if(max===0)return;
+$('target-hint').textContent='选择 '+max+' 个建筑（再点可取消），每个选中建筑中奖概率各 +5%';
+const grid=$('target-grid');grid.innerHTML='';
+Object.keys(REEL_BASE).forEach(id=>{
+const b=BUILDINGS[id];
+const div=document.createElement('div');div.className='tg-cell';div.dataset.id=id;
+/* 数值：攻击力/攻速/射程；配方：作为材料的合成产物 */
+const meta=b.dmg?'<div class="tg-meta">'+b.dmg+'/'+b.cd/1000+'s/'+Math.round(b.range*100)+'%</div>':'';
+const recipe=RECIPES.find(r=>r.mats.includes(id));
+const recipeHtml=recipe?'<div class="tg-recipe '+(b.school==='fire'?'fire':'water')+'">→ '+BUILDINGS[recipe.product].icon+'</div>':'';
+div.innerHTML=b.icon+'<span class="tg-nm">'+b.name+'</span>'+meta+recipeHtml
++'<div class="tg-tip" style="font-size:11px;color:#64748b;margin-top:2px;cursor:pointer" data-id="'+id+'">ℹ️ 查看详情</div>';
+if(G.targetSymbols.includes(id))div.classList.add('selected');
+div.addEventListener('click',e=>{
+/* 点击详情行展开tip */
+if(e.target.classList.contains('tg-tip')){toast(b.name+'：'+b.desc);return;}
+if(div.classList.contains('selected')){div.classList.remove('selected');G.targetSymbols=G.targetSymbols.filter(t=>t!==id);}
+else{
+if(G.targetSymbols.length>=max){toast('最多选择 '+max+' 个');return;}
+div.classList.add('selected');G.targetSymbols.push(id);
+}
+renderProbPanel();
+});
+grid.appendChild(div);
+});
+$('modal-target').classList.add('active');
+}
+
+/* ================= 终局 ================= */
+function gameOver(win){
+G.over=true;G.phase='over';
+if(rAF)cancelAnimationFrame(rAF);
+showScreen('settle');
+$('settle-title').textContent=win?'🏆 防线守住了！':'💀 防线崩溃……';
+$('settle-title').className=win?'win':'lose';
+$('settle-wave').textContent='到达波次：第 '+G.wave+' / '+totalWaveNodes()+' 波';
+$('settle-detail').innerHTML='击杀：'+G.stats.kills+'　漏怪：'+G.stats.leaks+'<br>获得建筑：'+G.stats.builds+'　完成合成：'+G.stats.synths+'<br>剩余铜钱：'+G.copper+'　剩余金币：'+G.gold;
+/* 阵容快照 */
+const sg=$('settle-grid');sg.innerHTML='';
+G.board.forEach(b=>{const d=document.createElement('div');d.className='sc';d.textContent=b?BUILDINGS[b.id].icon:'';sg.appendChild(d);});
+/* 投资路线 */
+const ip=G.stats.investPath.map(id=>{const a=ABILITIES.find(x=>x.id===id);return a?a.name:'';}).filter(Boolean);
+$('settle-invest').textContent=ip.length?'老虎机升级路线：'+ip.join(' → '):'本局未升级老虎机';
+}
+
+/* ================= 事件绑定与启动 ================= */
+function init(){
+bfEl=$('battlefield');gridEl=$('grid');reserveEl=$('reserve');
+G=newGame();
+$('btn-start').addEventListener('click',()=>{G=newGame();clearBattlefield();showScreen('game');startWave();lastTime=performance.now();if(rAF)cancelAnimationFrame(rAF);rAF=requestAnimationFrame(gameLoop);});
+$('btn-help').addEventListener('click',()=>showScreen('help'));
+$('btn-help-back').addEventListener('click',()=>showScreen('title'));
+$('btn-restart').addEventListener('click',()=>{G=newGame();clearBattlefield();showScreen('game');startWave();lastTime=performance.now();if(rAF)cancelAnimationFrame(rAF);rAF=requestAnimationFrame(gameLoop);});
+$('btn-slot').addEventListener('click',openSlot);
+$('slot-close').addEventListener('click',closeSlot);
+$('btn-spin').addEventListener('click',doSpin);
+$('btn-done-spin').addEventListener('click',()=>{closeSlot();});
+$('btn-swap-center').addEventListener('click',toggleSwapMode);
+$('btn-lock-mode').addEventListener('click',toggleLockMode);
+$('btn-target').addEventListener('click',openTargetPicker);
+$('btn-target-confirm').addEventListener('click',()=>{$('modal-target').classList.remove('active');renderTargetRow();renderProbPanel();});
+$('target-close').addEventListener('click',()=>{$('modal-target').classList.remove('active');});
+$('btn-shop').addEventListener('click',openShop);
+$('shop-close').addEventListener('click',()=>{$('modal-shop').classList.remove('active');G.shopOffers=[];});
+$('btn-shop-refresh').addEventListener('click',()=>{
+const tiers=CONFIG.economy.refreshTiers;
+const rc=tiers[Math.min(G.shopRefreshCount,tiers.length-1)];
+if(G.gold<rc){toast('金币不足(需'+rc+')');return;}
+G.gold-=rc;G.shopRefreshCount++;G.shopOffers=[];
+$('shop-gold').textContent=G.gold;renderHUD();renderShop();updateShopRefreshUI();
+});
+$('btn-invest-refresh').addEventListener('click',()=>{
+const tiers=CONFIG.economy.refreshTiers;
+const rc=tiers[Math.min(G.investRefreshCount,tiers.length-1)];
+if(G.gold<rc){toast('金币不足(需'+rc+')');return;}
+G.gold-=rc;G.investRefreshCount++;$('invest-gold').textContent=G.gold;renderHUD();
+const unowned=ABILITIES.filter(a=>!G.ownedAbilities.includes(a.id));
+G.investOffers=pickRandom(unowned,Math.min(3,unowned.length));renderInvest();updateInvestRefreshUI();
+});
+$('btn-battle').addEventListener('click',startBattleSequence);
+/* 自动合成已删除：原"确认并开始战斗"按钮改为直接开战（跳过合成，纯手动拖拽） */
+$('btn-synth-confirm').addEventListener('click',()=>{G.phase='battle';$('synth-panel').style.display='none';enterBattle();});
+$('btn-synth-skip').addEventListener('click',()=>{$('synth-panel').style.display='none';enterBattle();});
+$('btn-synth-collapse').addEventListener('click',()=>{const p=$('synth-panel');p.classList.toggle('collapsed');$('btn-synth-collapse').textContent=p.classList.contains('collapsed')?'展开 ▴':'收起 ▾';});
+for(let col=0;col<3;col++){const nb=$('nudge-'+col);if(nb)nb.addEventListener('click',()=>nudge(col));}
+for(const m of [1,2,4]){const sb=$('speed-'+m);if(sb)sb.addEventListener('click',()=>{G.battleSpeed=m;updateSpeedBtns();});}
+initDrag();
+/* 建筑说明 tip：点击建筑显示，点 ✕ 关闭；拖拽刚结束 300ms 内忽略点击 */
+let lastDragEnd=0;
+document.addEventListener('pointerup',()=>{if(drag)lastDragEnd=Date.now();});
+document.addEventListener('click',e=>{
+if(Date.now()-lastDragEnd<300)return;
+if(e.target.classList.contains('tip-close')){hideBuildingTip();return;}
+const el=e.target.closest('.cell,.res-item');
+if(el&&el.dataset.src){
+const item=el.dataset.src==='grid'?G.board[+el.dataset.idx]:G.reserve[+el.dataset.idx];
+if(item)showBuildingTip(item);
+}
+});
+renderBoard();renderHUD();
+}
+init();
+</script>
+</body>
+</html>
