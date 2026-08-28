@@ -7,6 +7,10 @@ Thumbs.db
 # 临时/备份文件（审计备份等非当前版本）
 docs/audit-evidence/**/*-backup.html
 
+# 大型设计资产：原始 PDF 设计稿与审计截图（体积大，不进版本库）
+references/*.pdf
+docs/audit-evidence/**/*.png
+
 # 若日后引入构建产物或依赖目录，在此排除
 # node_modules/
 # dist/
