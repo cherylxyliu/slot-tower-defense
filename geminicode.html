@@ -112,13 +112,32 @@ html,body{height:100%;overflow:hidden;background:#0f172a;font-family:"PingFang S
 .modal-box h3{color:#f59e0b;font-size:17px;margin-bottom:12px;text-align:center}
 .modal-close{position:absolute;top:8px;right:8px;background:#ef4444;color:#fff;border:none;width:26px;height:26px;border-radius:50%;font-weight:bold;cursor:pointer;font-size:14px}
 /* ===== 老虎机 ===== */
-#slot-grid{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,64px);gap:6px;margin:12px auto;position:relative;justify-content:center}
-.slot-cell{background:#0f172a;border:2px solid #334155;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:30px;position:relative;transition:border-color .2s}
-.slot-cell.win{border-color:#f59e0b;background:#78350f;animation:pulse .6s infinite alternate}
+#modal-slot .slot-cabinet{overflow-x:hidden;background:radial-gradient(circle at 50% 0,rgba(168,85,247,.25),transparent 38%),linear-gradient(160deg,#312e81 0%,#1e1b4b 35%,#111827 100%);border:2px solid #fbbf24;box-shadow:0 0 0 4px #7c2d12,0 0 24px rgba(245,158,11,.55),inset 0 0 26px rgba(168,85,247,.3)}
+#modal-slot .slot-cabinet::before{content:'';position:absolute;inset:5px;border-radius:10px;pointer-events:none;background:radial-gradient(circle,#fde68a 0 2px,transparent 3px) 0 0/22px 22px;opacity:.42;filter:drop-shadow(0 0 4px #f59e0b)}
+#modal-slot .slot-cabinet>:not(#slot-celebration){position:relative;z-index:2}
+#modal-slot .slot-cabinet h3{font-size:21px;letter-spacing:2px;color:#fef3c7;text-shadow:0 0 7px #f59e0b,0 2px 0 #92400e}
+#slot-grid{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,64px);gap:6px;margin:12px auto;position:relative;justify-content:center;padding:9px;border:4px solid #f59e0b;border-radius:16px;background:linear-gradient(180deg,#451a03,#111827);box-shadow:0 0 0 3px #fcd34d,0 0 22px rgba(245,158,11,.5),inset 0 0 18px #000;overflow:hidden}
+#slot-grid::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 25%,transparent 72%,rgba(0,0,0,.35));z-index:4}
+.slot-cell{background:linear-gradient(180deg,#f8fafc,#cbd5e1);border:2px solid #fbbf24;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:30px;position:relative;transition:border-color .2s,filter .2s,transform .2s;color:#0f172a;box-shadow:inset 0 0 10px rgba(15,23,42,.28)}
+.slot-cell.reel-spinning{filter:blur(1.5px) saturate(1.35);animation:reelRush .14s linear infinite}
+.slot-cell.reel-stopped{animation:reelLand .28s cubic-bezier(.2,1.8,.4,1)}
+.slot-cell.win{border-color:#fff7ad;background:linear-gradient(135deg,#fef3c7,#f59e0b);box-shadow:0 0 18px #facc15,inset 0 0 12px #fff;animation:winPulse .45s infinite alternate;z-index:5}
 .slot-cell.swap-target{border-color:#38bdf8;cursor:pointer}
 .slot-cell.locked::after{content:'🔒';position:absolute;top:2px;left:4px;font-size:10px}
 .slot-cell.lock-pick{cursor:crosshair;border-color:#f59e0b;background:rgba(245,158,11,.15)}
-@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.06)}}
+@keyframes reelRush{0%{transform:translateY(-7px) scaleY(1.12)}50%{transform:translateY(7px) scaleY(.92)}100%{transform:translateY(-7px) scaleY(1.12)}}
+@keyframes reelLand{0%{transform:translateY(-18px) scaleY(1.16)}70%{transform:translateY(5px) scaleY(.9)}100%{transform:none}}
+@keyframes winPulse{from{transform:scale(1);filter:brightness(1)}to{transform:scale(1.08);filter:brightness(1.35)}}
+#slot-celebration{position:absolute;inset:0;z-index:12;pointer-events:none;overflow:hidden;border-radius:14px;display:none;align-items:center;justify-content:center}
+#slot-celebration.show{display:flex}
+#slot-win-title{font-size:34px;font-weight:1000;letter-spacing:2px;color:#fff7ad;text-align:center;text-shadow:0 0 5px #fff,0 0 14px #f59e0b,0 4px 0 #9a3412;transform:rotate(-4deg);animation:jackpotPop .55s cubic-bezier(.2,1.8,.3,1);z-index:3}
+#slot-celebration.big #slot-win-title{font-size:40px;color:#f0abfc;text-shadow:0 0 7px #fff,0 0 18px #d946ef,0 5px 0 #701a75}
+#slot-celebration.mega #slot-win-title{font-size:44px;color:#fff;text-shadow:0 0 7px #fff,0 0 18px #f59e0b,0 0 30px #ec4899,0 5px 0 #92400e}
+.slot-particle{position:absolute;left:50%;top:47%;font-size:var(--size);animation:casinoBurst var(--dur) cubic-bezier(.1,.65,.2,1) forwards;animation-delay:var(--delay)}
+.reward-fly{position:fixed;z-index:360;pointer-events:none;font-size:32px;filter:drop-shadow(0 0 8px #fbbf24)}
+@keyframes jackpotPop{0%{transform:scale(.15) rotate(-12deg);opacity:0}65%{transform:scale(1.22) rotate(3deg)}100%{transform:scale(1) rotate(-4deg);opacity:1}}
+@keyframes casinoBurst{0%{transform:translate(-50%,-50%) scale(.3) rotate(0);opacity:0}12%{opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.1) rotate(var(--rot));opacity:0}}
+@media (prefers-reduced-motion:reduce){.slot-cell.reel-spinning,.slot-cell.reel-stopped,.slot-cell.win,#slot-win-title,.slot-particle{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 .slot-col-btn{position:absolute;top:-30px;width:64px;text-align:center}
 .col-nudge-btn{background:linear-gradient(180deg,#475569,#334155);color:#38bdf8;border:1px solid #64748b;border-radius:6px;padding:3px 0;font-size:14px;cursor:pointer;width:64px;display:block}
 .col-nudge-btn:hover:not(:disabled){background:linear-gradient(180deg,#38bdf8,#1e40af);color:#fff}
@@ -222,6 +241,9 @@ html,body{height:100%;overflow:hidden;background:#0f172a;font-family:"PingFang S
   .res-item{min-width:46px;height:48px;font-size:20px}
   #action-row{gap:6px}
   #action-row .btn-sm{min-height:44px;padding:8px 14px}
+  #modal-slot .modal-close{width:44px;height:44px;font-size:18px}
+  #modal-slot .modal-close:disabled{opacity:.35;filter:grayscale(.6)}
+  #modal-slot .col-nudge-btn{min-height:44px}
   #wave-progress{width:100%;padding:4px 0 8px;overflow:hidden}
   .wp-node{width:14px;height:14px;border-width:1px;font-size:7px}
   .wp-node .wp-num{display:none}
@@ -305,7 +327,8 @@ html,body{height:100%;overflow:hidden;background:#0f172a;font-family:"PingFang S
 
 <!-- 老虎机弹窗 -->
 <div class="modal" id="modal-slot">
-  <div class="modal-box">
+  <div class="modal-box slot-cabinet">
+    <div id="slot-celebration" aria-live="polite"><div id="slot-win-title"></div></div>
     <button class="modal-close" id="slot-close">✕</button>
     <h3>🎰 幸运老虎机</h3>
     <div id="slot-hud"><span>💰 <b id="slot-copper">40</b></span><span class="cost" id="slot-cost">下次消耗 10</span></div>
@@ -877,23 +900,40 @@ return[0,1,2].map(()=>[0,1,2,3].map(()=>weightedSymbol(w)));
 function reelCell(i){const col=i%3,row=Math.floor(i/3);return G.reels[col][row];}
 
 /* ================= 老虎机：抽取流程 ================= */
+const slotSpin={active:false,phase:'idle',timeouts:[],intervals:[]};
+window.__slotSpinActive=false;
+function prefersReducedMotion(){return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);}
+function slotTimeout(fn,delay){const id=setTimeout(fn,delay);slotSpin.timeouts.push(id);return id;}
+function clearSlotSpinTimers(){slotSpin.timeouts.forEach(clearTimeout);slotSpin.intervals.forEach(clearInterval);slotSpin.timeouts=[];slotSpin.intervals=[];}
+function setSlotSpinActive(active){
+slotSpin.active=active;window.__slotSpinActive=active;
+$('slot-close').disabled=active;
+$('btn-spin').setAttribute('aria-busy',active?'true':'false');
+updateSpinCostUI();updateNudgeBtns();showAdjustUI();renderLockRow();
+}
+function clearSlotFx(){
+$('slot-grid').classList.remove('slot-big-win','slot-mega-win');
+document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>{c.classList.remove('reel-spinning','reel-stopped','reel-stop-0','reel-stop-1','reel-stop-2','win');});
+const fx=$('slot-celebration');fx.className='';fx.classList.remove('show');fx.querySelectorAll('.slot-particle').forEach(p=>p.remove());$('slot-win-title').textContent='';
+}
 function openSlot(){
-$('modal-slot').classList.add('active');
+clearSlotFx();$('modal-slot').classList.add('active');
 $('slot-copper').textContent=G.copper;updateSpinCostUI();renderProbPanel();renderHiddenPreview();renderAbilityList();renderTargetRow();renderLockRow();
 if(!G.reels){G.reels=generateReels();renderSlotGrid();}
-/* 打开即刷新调整按钮状态，确保未抽奖也能调整格子 */
 updateNudgeBtns();showAdjustUI();
 }
 function closeSlot(){
+if(slotSpin.active){toast('转轴正在转动，请等待停轮');return;}
 $('modal-slot').classList.remove('active');
-G.adjustMode=false;G.swapMode=false;
-/* 关闭老虎机即清空结果，下次打开将重新生成 reel，避免跨波残留 */
-G.reels=null;G.linesWon=[];
+G.adjustMode=false;G.swapMode=false;G.lockMode=false;
+document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.remove('swap-target','lock-pick'));
+/* 保留当前盘面与已结算中奖线，避免关闭重开获得免费新盘面或绕过中奖限制；每波开始时统一重置。 */
+clearSlotFx();
 }
 function updateSpinCostUI(){
 const cost=spinCost();$('slot-cost').textContent='下次消耗 '+cost;
-$('btn-spin').textContent='消耗 '+cost+' 铜钱抽卡';
-$('btn-spin').disabled=G.copper<cost;
+$('btn-spin').textContent=slotSpin.active?'转轴转动中…':'消耗 '+cost+' 铜钱抽卡';
+$('btn-spin').disabled=slotSpin.active||G.copper<cost;
 }
 function spinCost(){
 const idx=Math.min(G.spinCount,SPIN_COSTS.length-1);
@@ -903,12 +943,14 @@ return c;
 }
 function hasAb(id){return G.ownedAbilities.includes(id);}
 function doSpin(){
+if(slotSpin.active)return;
 const cost=spinCost();
 if(G.copper<cost){toast('铜钱不足！本波消耗已递增，下一波重置');return;}
+clearSlotSpinTimers();clearSlotFx();slotSpin.phase='rolling';setSlotSpinActive(true);
 G.copper-=cost;G.spinCount++;G.spinTotal++;
-$('slot-copper').textContent=G.copper;
-G.adjustMode=false;G.swapMode=false;
-/* D3 锁定 */
+$('slot-copper').textContent=G.copper;$('slot-result-text').textContent='🎰 转轴启动！';
+G.adjustMode=false;G.swapMode=false;G.lockMode=false;
+document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.remove('swap-target','lock-pick'));
 const lockedSym=G.lockedCell>=0?reelCell(G.lockedCell):null;
 const weights=getCurrentWeights();
 G.reels=[0,1,2].map(col=>{
@@ -917,26 +959,74 @@ if(lockedSym!==null&&lockedSym!==undefined){const col2=G.lockedCell%3,row=Math.f
 return arr;
 });
 G.lockedCell=-1;
-/* 转动动画 */
-const cells=$('slot-grid').children;let ticks=0;
-const iv=setInterval(()=>{
-for(const c of cells)c.textContent=BUILDINGS[weightedSymbol(weights)].icon;
-if(++ticks>8){clearInterval(iv);finishSpin();}
-},60);
+startReelSpin(weights);
 }
-function finishSpin(){
-renderSlotGrid();
-G.linesWon=[];
+function startReelSpin(weights){
+const reduced=prefersReducedMotion();const stopAt=reduced?[80,130,180]:[650,950,1250];
+for(let col=0;col<3;col++){
+const colCells=[col,col+3,col+6].map(i=>cells(i));
+colCells.forEach(c=>c.classList.add('reel-spinning'));
+const iv=reduced?null:setInterval(()=>{colCells.forEach(c=>c.textContent=BUILDINGS[weightedSymbol(weights)].icon);},55+col*8);
+if(iv)slotSpin.intervals.push(iv);
+slotTimeout(()=>{
+if(iv){clearInterval(iv);slotSpin.intervals=slotSpin.intervals.filter(x=>x!==iv);}
+colCells.forEach((c,row)=>{c.textContent=BUILDINGS[G.reels[col][row]].icon;c.classList.remove('reel-spinning');c.classList.add('reel-stopped','reel-stop-'+col);});
+if(col===2)slotTimeout(()=>finishSpin(false),reduced?20:170);
+},stopAt[col]);
+}
+}
+function finishSpin(skipFx){
+if(!slotSpin.active||slotSpin.phase!=='rolling')return;
+slotSpin.phase='settling';clearSlotSpinTimers();
+document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.remove('reel-spinning'));
+renderSlotGrid();G.linesWon=[];
 let awarded=0;
 for(const line of PAYLINES){
 const s=reelCell(line[0]);
-if(reelCell(line[1])===s&&reelCell(line[2])===s){G.linesWon.push(line);
-awardBuilding(s);awarded++;
-line.forEach(i=>cells(i).classList.add('win'));}
+if(reelCell(line[1])===s&&reelCell(line[2])===s){G.linesWon.push(line);awardBuilding(s);awarded++;}
 }
 processSpinResult(awarded,'');
-renderSlotGrid();updateSpinCostUI();renderProbPanel();renderHiddenPreview();
-showAdjustUI();
+renderSlotGrid();renderProbPanel();renderHiddenPreview();
+if(skipFx){endSlotSpin();return;}
+if(awarded>0)playSlotWinSequence(awarded);else slotTimeout(endSlotSpin,prefersReducedMotion()?20:320);
+}
+function endSlotSpin(){
+clearSlotSpinTimers();slotSpin.phase='idle';
+const fx=$('slot-celebration');fx.classList.remove('show');fx.querySelectorAll('.slot-particle').forEach(p=>p.remove());
+document.querySelectorAll('.reward-fly').forEach(el=>{if(el.getAnimations)el.getAnimations().forEach(a=>a.cancel());el.remove();});
+document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.remove('reel-spinning','reel-stopped'));
+setSlotSpinActive(false);
+}
+function createCasinoParticles(level){
+const fx=$('slot-celebration');const mobile=isMobileTouch();const count=prefersReducedMotion()?0:(mobile?(level==='mega'?48:32):(level==='mega'?88:56));
+const glyphs=['✦','★','◆','●','🎉','💰'];
+for(let i=0;i<count;i++){
+const p=document.createElement('span');p.className='slot-particle';p.textContent=glyphs[i%glyphs.length];
+const angle=Math.PI*2*i/Math.max(count,1),dist=80+Math.random()*(mobile?150:210);
+p.style.setProperty('--dx',Math.cos(angle)*dist+'px');p.style.setProperty('--dy',Math.sin(angle)*dist+'px');p.style.setProperty('--rot',(Math.random()*720-360)+'deg');p.style.setProperty('--dur',(700+Math.random()*600)+'ms');p.style.setProperty('--delay',(Math.random()*120)+'ms');p.style.setProperty('--size',(10+Math.random()*15)+'px');
+fx.appendChild(p);
+}
+}
+function flySlotReward(line){
+if(prefersReducedMotion())return;
+const source=cells(line[0]).getBoundingClientRect(),target=gridEl.getBoundingClientRect();
+const el=document.createElement('div');el.className='reward-fly';el.textContent=BUILDINGS[reelCell(line[0])].icon;el.style.left=(source.left+source.width/2-16)+'px';el.style.top=(source.top+source.height/2-16)+'px';document.body.appendChild(el);
+const dx=target.left+target.width/2-(source.left+source.width/2),dy=target.top+target.height/2-(source.top+source.height/2);
+if(!el.animate){slotTimeout(()=>el.remove(),800);return;}
+const anim=el.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:'translate('+dx*.45+'px,'+(dy-55)+'px) scale(1.45)',opacity:1,offset:.55},{transform:'translate('+dx+'px,'+dy+'px) scale(.45)',opacity:.1}],{duration:780,easing:'cubic-bezier(.2,.8,.2,1)'});
+anim.onfinish=anim.oncancel=()=>el.remove();
+}
+function playSlotWinSequence(awarded){
+slotSpin.phase='celebrating';const reduced=prefersReducedMotion();
+const level=awarded>=4?'mega':awarded>=2?'big':'win';const title=awarded>=4?'MEGA WIN ×'+awarded:awarded>=2?'BIG WIN ×'+awarded:'WIN!';
+const fx=$('slot-celebration');fx.className='show '+level;$('slot-win-title').textContent=title;createCasinoParticles(level);
+document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.remove('win'));
+G.linesWon.forEach((line,idx)=>slotTimeout(()=>{line.forEach(i=>cells(i).classList.add('win'));flySlotReward(line);},reduced?0:idx*140));
+slotTimeout(endSlotSpin,reduced?60:650+Math.min(G.linesWon.length,5)*140);
+}
+function forceSettleSlotSpin(){
+if(!slotSpin.active)return;
+if(slotSpin.phase==='rolling')finishSpin(true);else endSlotSpin();
 }
 function cells(i){return $('slot-grid').children[i];}
 function processSpinResult(awarded,suffix){
@@ -982,6 +1072,7 @@ renderBoard();
 }
 /* 列下移 */
 function nudge(col){
+if(slotSpin.active)return;
 if(G.nudgeUsed>=G.nudgeMax){toast('本波下移次数已用完');return;}
 G.nudgeUsed++;
 const r=G.reels[col];
@@ -1001,6 +1092,7 @@ renderSlotGrid();updateNudgeBtns();
  * 设计意图：每次"未中奖"时可用的保底调整——中奖后不允许再用。
  * 故中奖状态（G.linesWon.length>0）下拦截，提示玩家先领取或等待下次机会。 */
 function toggleSwapMode(){
+if(slotSpin.active)return;
 if(G.swapUsed){toast('本波已用过中心交换，下波重置');return;}
 if(G.linesWon.length>0){toast('中奖时不可使用中心交换，请先领取奖励');return;}
 G.swapMode=!G.swapMode;
@@ -1010,6 +1102,7 @@ if(G.swapMode)toast('点击要交换的外围格子');
 }
 /* 图标锁定（D3）：进入锁定模式后点击格子，锁定该格图标 */
 function toggleLockMode(){
+if(slotSpin.active)return;
 if(!hasAb('D3'))return;
 if(G.lockUsed){toast('本波已用过图标锁定');return;}
 G.lockMode=!G.lockMode;
@@ -1027,7 +1120,7 @@ $('lock-hint').style.display='';
 renderSlotGrid();renderLockRow();
 }
 function centerSwap(outerIdx){
-if(!G.swapMode||outerIdx===4)return;
+if(slotSpin.active||!G.swapMode||outerIdx===4)return;
 const r=G.reels;const col=outerIdx%3,row=Math.floor(outerIdx/3);
 const cCol=1,cRow=1;
 if(r[col][row]===r[cCol][cRow]){toast('两格图标相同，无法交换');return;}
@@ -1055,6 +1148,8 @@ $('slot-grid').appendChild(c);}
 for(let i=0;i<9;i++){const c=cells(i);const sym=reelCell(i);
 c.textContent=sym&&BUILDINGS[sym]?BUILDINGS[sym].icon:'❓';
 c.classList.toggle('locked',G.lockedCell===i);
+c.classList.toggle('swap-target',!!G.swapMode&&i!==4&&!slotSpin.active);
+c.classList.toggle('lock-pick',!!G.lockMode&&!slotSpin.active);
 /* 中奖线高亮：根据 G.linesWon 精确判断，而非无脑清除 */
 const won=G.linesWon.some(line=>line.includes(i));
 c.classList.toggle('win',won);}
@@ -1063,7 +1158,7 @@ updateNudgeBtns();
 function renderLockRow(){
 const row=$('lock-row');
 /* 无 D3 或本波已用过 → 整行隐藏，避免误导 */
-const canLock=hasAb('D3')&&!G.lockUsed;
+const canLock=hasAb('D3')&&!G.lockUsed&&!slotSpin.active;
 row.style.display=canLock?'flex':'none';
 if(!canLock)return;
 if(!G.lockMode){$('btn-lock-mode').style.display='';$('lock-status').textContent='';}
@@ -1071,13 +1166,12 @@ else{$('btn-lock-mode').style.display='none';$('lock-status').textContent='请�
 $('lock-hint').style.display=G.lockMode?'none':'';
 }
 function updateNudgeBtns(){
-const locked=G.spinCount<=0; /* 未抽奖前锁定格子调整，防止跨波提前改动 reel */
+const locked=slotSpin.active||G.spinCount<=0;
 for(let col=0;col<3;col++){const b=$('nudge-'+col);if(b)b.disabled=locked||G.nudgeUsed>=G.nudgeMax||!G.reels||G.reels[0][0]==='❓';}
 }
 function showAdjustUI(){
-const locked=G.spinCount<=0; /* 未抽奖前不开放格子调整入口（列下移/中心交换） */
+const locked=slotSpin.active||G.spinCount<=0;
 $('btn-done-spin').style.display=locked?'none':'';
-/* 中心交换按钮：仅"未中奖"时显示（中奖后不可再用，符合保底调整的设计意图） */
 $('btn-swap-center').style.display=(!locked&&hasAb('D2')&&!G.swapUsed&&G.linesWon.length===0)?'':'none';
 }
 function renderProbPanel(){
@@ -1106,7 +1200,7 @@ $('hidden-preview').innerHTML=hasAb('L4')&&G.reels&&G.reels[0][0]!=='❓'?
 
 /* ================= 波次流程 ================= */
 function startWave(){
-G.phase='prep';G.spinCount=0;G.nudgeUsed=0;G.nudgeMax=hasAb('L1')?2:1;G.lockUsed=false;G.lockedCell=-1;G.swapUsed=false;
+G.phase='prep';G.spinCount=0;G.nudgeUsed=0;G.nudgeMax=hasAb('L1')?2:1;G.lockUsed=false;G.lockMode=false;G.lockedCell=-1;G.swapUsed=false;
 /* 注意：shopRefreshCount/investRefreshCount 故意不在此清零——刷新阶梯跨波累积、整局不重置，
  * 仅在 newGame() 开局清零，以持续消化溢出金币(越刷越贵)。 */
 /* 每波开始重置触发器状态：火药车命中计数(hitN/lastTrig)、引雷针潮湿引爆计时(lastWetTrig)，
@@ -1780,6 +1874,8 @@ $('btn-done-spin').addEventListener('click',()=>{closeSlot();});
 $('btn-swap-center').addEventListener('click',toggleSwapMode);
 $('btn-lock-mode').addEventListener('click',toggleLockMode);
 $('btn-target').addEventListener('click',openTargetPicker);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)forceSettleSlotSpin();});
+window.addEventListener('pagehide',forceSettleSlotSpin);
 $('btn-target-confirm').addEventListener('click',()=>{$('modal-target').classList.remove('active');renderTargetRow();renderProbPanel();});
 $('target-close').addEventListener('click',()=>{$('modal-target').classList.remove('active');});
 $('btn-shop').addEventListener('click',openShop);
