@@ -437,7 +437,7 @@ economy:{
 /* ---- 建筑总表：school=fire|water（第三流派预留 school 枚举扩展，内容暂不填）---- */
 buildings:{
 archer:{id:'archer',name:'短弓',icon:'🏹',tier:1,school:'fire',rarity:'common',dmg:10,cd:900,range:.55,single:1,desc:'单体速射：锁定最近敌人快速射箭(伤10)。可合成：+火盆→重型火箭塔'},
-stone:{id:'stone',name:'投石机',icon:'🪨',tier:1,school:'fire',rarity:'common',dmg:32,cd:2400,range:.80,aoe:.18,desc:'范围打击：砸向1个敌人并溅伤周围一圈(伤32)'},
+stone:{id:'stone',name:'投石机',icon:'🪨',tier:1,school:'fire',rarity:'common',dmg:32,cd:2400,range:.80,aoe:.18,desc:'范围打击：砸向1个敌人并溅伤周围一圈(伤32)。可同名升星解锁成长能力'},
 firebasin:{id:'firebasin',name:'火盆',icon:'🔥',tier:2,school:'fire',rarity:'uncommon',dmg:0,synergy:{neighbor:'archer',stat:'dmg',mult:2.0,note:'相邻短弓时使其伤害×2并转火焰(协同是最优解放大器)'},desc:'辅助：放在短弓🏹旁边，让短弓伤害翻倍、变成火箭。自身不攻击。合成路线：+短弓→重型火箭塔🚀'},
 smith:{id:'smith',name:'铁匠铺',icon:'⚒️',tier:2,school:'fire',rarity:'uncommon',dmg:0,synergy:{anyTower:{stat:'spd',perStar:.3,note:'相邻任意塔攻速+30%/星'}},desc:'辅助：让上下左右相邻塔攻速+30%(每星再+30%)，自身不攻击'},
 cart:{id:'cart',name:'火药车',icon:'💣',tier:2,school:'fire',rarity:'rare',dmg:0,trigger:'fire',trigDmg:150,trigHits:3,trigCdMs:5000,selfBoom:{hpRate:.08,interval:10,note:'每10秒对同列敌人造成最大生命8%灼烧'},desc:'自爆火力车：放在场上每10秒自动灼烧同列敌人；当🏹(需被🔥转为火箭)或🚀在同列每3次命中敌人时，额外引爆全屏(伤150，Boss减半)'},
@@ -469,13 +469,11 @@ star_abilities:[
   {id:1,name:'连击倾向',desc:'每次攻击有60%概率攻击两次',effectType:'double_strike',value:0.6},
   {id:2,name:'疾射',desc:'攻速提高5%',effectType:'atk_speed',value:0.05},
   {id:3,name:'破甲',desc:'无视目标20%护甲',effectType:'armor_pierce',value:0.20},
-  {id:4,name:'吸血',desc:'击杀敌人回复1点基地血量',effectType:'lifesteal',value:1},
-  {id:5,name:'溅射增幅',desc:'范围伤害提高15%',effectType:'aoe_amp',value:0.15},
   {id:6,name:'控制延长',desc:'减速/麻痹效果持续时间+30%',effectType:'control_ext',value:0.30},
-  {id:7,name:'连锁增强',desc:'闪电链额外跳1个目标',effectType:'chain_plus',value:1},
+  {id:7,name:'专注',desc:'连续命中同一目标时伤害递增(每层+12%,最多叠加3层,切换目标重置)',effectType:'focus',value:0.12},
   {id:8,name:'暴击储备',desc:'暴击伤害提高25%',effectType:'crit_dmg',value:0.25},
   {id:9,name:'经济嗅觉',desc:'该建筑在场时每波额外+3铜钱',effectType:'econ_passive',value:3},
-  {id:10,name:'成长适应',desc:'升星时额外获得5%全属性',effectType:'growth',value:0.05}
+  {id:10,name:'狙击',desc:'优先攻击最远(或最高威胁)的敌人,无视其所在排次',effectType:'sniper',value:1}
 ],
 
 /* ---- 排行榜计分系数：结算总分 = Σ(建筑稀有度分×星级分) + 剩余血量×hpWeight + 剩余货币 ---- */
