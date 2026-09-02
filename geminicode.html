@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>九宫防线</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -209,6 +209,27 @@ html,body{height:100%;overflow:hidden;background:#0f172a;font-family:"PingFang S
 .synth-recipe.ok{background:#0f172a;border:1px solid #334155}
 .synth-actions{display:flex;gap:8px;margin-top:8px}
 .synth-actions .btn{flex:1}
+/* ===== 移动竖屏：沿用桌面分区比例，缩小阵型并把空间还给战场 ===== */
+@media (max-width:600px) and (pointer:coarse){
+  #app{height:100vh;height:100dvh;min-height:0;padding-top:env(safe-area-inset-top,0px)}
+  #battlefield{min-height:180px;max-height:none}
+  #grid-area{padding:6px 10px 3px}
+  #grid{width:min(228px,31dvh,62vw);max-width:none}
+  .cell{font-size:clamp(22px,7vw,28px);border-radius:8px}
+  #bottom-panel{padding:4px 10px max(4px,env(safe-area-inset-bottom,0px));gap:3px}
+  #panel-label{font-size:10px}
+  #reserve{min-height:50px;padding:2px 0}
+  .res-item{min-width:46px;height:48px;font-size:20px}
+  #action-row{gap:6px}
+  #action-row .btn-sm{min-height:44px;padding:8px 14px}
+  #wave-progress{width:100%;padding:4px 0 8px;overflow:hidden}
+  .wp-node{width:14px;height:14px;border-width:1px;font-size:7px}
+  .wp-node .wp-num{display:none}
+  .wp-line{min-width:1px;max-width:4px}
+  #btn-slot.mobile-guide{background:#f59e0b;color:#fff;border:2px solid #fcd34d;box-shadow:0 0 0 0 rgba(245,158,11,.65);animation:mobileGuidePulse 1.25s ease-in-out infinite}
+  @keyframes mobileGuidePulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.55)}50%{box-shadow:0 0 0 7px rgba(245,158,11,0)}}
+}
+@media (prefers-reduced-motion:reduce){#btn-slot.mobile-guide{animation:none}}
 </style>
 </head>
 <body>
@@ -605,6 +626,20 @@ bfEl.querySelectorAll('.enemy,.bullet,.fx-line,.fx-beam,.fx-boom').forEach(el=>e
 
 /* ================= 屏幕管理 ================= */
 function showScreen(name){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$('screen-'+name).classList.add('active');G.screen=name;}
+
+/* 移动首局引导：只提示一次，不改变桌面端按钮 */
+let mobileSlotGuideSeen=false;
+function isMobileTouch(){return !!(window.matchMedia&&window.matchMedia('(max-width:600px) and (pointer:coarse)').matches);}
+function showMobileSlotGuide(){
+const btn=$('btn-slot');
+if(!btn||mobileSlotGuideSeen||!isMobileTouch())return;
+btn.classList.add('mobile-guide');btn.textContent='① 点老虎机抽建筑';btn.setAttribute('aria-label','第一步：点击老虎机抽取建筑');
+}
+function dismissMobileSlotGuide(){
+const btn=$('btn-slot');mobileSlotGuideSeen=true;
+if(!btn||!btn.classList.contains('mobile-guide'))return;
+btn.classList.remove('mobile-guide');btn.textContent='🎰 幸运老虎机';btn.setAttribute('aria-label','打开幸运老虎机');
+}
 
 /* ================= 工具 ================= */
 let toastTimer=null;
@@ -1734,11 +1769,11 @@ $('settle-invest').textContent=ip.length?'老虎机升级路线：'+ip.join(' �
 function init(){
 bfEl=$('battlefield');gridEl=$('grid');reserveEl=$('reserve');
 G=newGame();
-$('btn-start').addEventListener('click',()=>{G=newGame();clearBattlefield();showScreen('game');startWave();lastTime=performance.now();if(rAF)cancelAnimationFrame(rAF);rAF=requestAnimationFrame(gameLoop);});
+$('btn-start').addEventListener('click',()=>{G=newGame();clearBattlefield();showScreen('game');startWave();showMobileSlotGuide();lastTime=performance.now();if(rAF)cancelAnimationFrame(rAF);rAF=requestAnimationFrame(gameLoop);});
 $('btn-help').addEventListener('click',()=>showScreen('help'));
 $('btn-help-back').addEventListener('click',()=>showScreen('title'));
-$('btn-restart').addEventListener('click',()=>{G=newGame();clearBattlefield();showScreen('game');startWave();lastTime=performance.now();if(rAF)cancelAnimationFrame(rAF);rAF=requestAnimationFrame(gameLoop);});
-$('btn-slot').addEventListener('click',openSlot);
+$('btn-restart').addEventListener('click',()=>{G=newGame();clearBattlefield();showScreen('game');startWave();showMobileSlotGuide();lastTime=performance.now();if(rAF)cancelAnimationFrame(rAF);rAF=requestAnimationFrame(gameLoop);});
+$('btn-slot').addEventListener('click',()=>{dismissMobileSlotGuide();openSlot();});
 $('slot-close').addEventListener('click',closeSlot);
 $('btn-spin').addEventListener('click',doSpin);
 $('btn-done-spin').addEventListener('click',()=>{closeSlot();});
