@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>九宫防线</title>
+<link rel="icon" href="data:,">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:#0f172a;font-family:"PingFang SC","Microsoft YaHei",sans-serif;color:#e2e8f0;user-select:none;touch-action:manipulation}
@@ -113,20 +114,23 @@ html,body{height:100%;overflow:hidden;background:#0f172a;font-family:"PingFang S
 .modal-close{position:absolute;top:8px;right:8px;background:#ef4444;color:#fff;border:none;width:26px;height:26px;border-radius:50%;font-weight:bold;cursor:pointer;font-size:14px}
 /* ===== 老虎机 ===== */
 #modal-slot .slot-cabinet{overflow-x:hidden;background:radial-gradient(circle at 50% 0,rgba(168,85,247,.25),transparent 38%),linear-gradient(160deg,#312e81 0%,#1e1b4b 35%,#111827 100%);border:2px solid #fbbf24;box-shadow:0 0 0 4px #7c2d12,0 0 24px rgba(245,158,11,.55),inset 0 0 26px rgba(168,85,247,.3)}
-#modal-slot .slot-cabinet::before{content:'';position:absolute;inset:5px;border-radius:10px;pointer-events:none;background:radial-gradient(circle,#fde68a 0 2px,transparent 3px) 0 0/22px 22px;opacity:.42;filter:drop-shadow(0 0 4px #f59e0b)}
+#modal-slot .slot-cabinet::before{content:'';position:absolute;left:12px;right:52px;top:8px;height:28px;border-radius:10px;pointer-events:none;background:radial-gradient(circle,#fde68a 0 2px,transparent 3px) 0 0/22px 22px;opacity:.34;filter:drop-shadow(0 0 3px #f59e0b);overflow:hidden}
 #modal-slot .slot-cabinet>:not(#slot-celebration){position:relative;z-index:2}
 #modal-slot .slot-cabinet h3{font-size:21px;letter-spacing:2px;color:#fef3c7;text-shadow:0 0 7px #f59e0b,0 2px 0 #92400e}
-#slot-grid{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,64px);gap:6px;margin:12px auto;position:relative;justify-content:center;padding:9px;border:4px solid #f59e0b;border-radius:16px;background:linear-gradient(180deg,#451a03,#111827);box-shadow:0 0 0 3px #fcd34d,0 0 22px rgba(245,158,11,.5),inset 0 0 18px #000;overflow:hidden}
+#slot-grid{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,64px);gap:6px;margin:12px auto;position:relative;justify-content:center;padding:9px;border:4px solid #f59e0b;border-radius:16px;background:linear-gradient(180deg,#451a03,#111827);box-shadow:0 0 0 3px #fcd34d,0 0 22px rgba(245,158,11,.5),inset 0 0 18px #000;overflow:hidden;--slot-cell:64px;--slot-gap:6px;--slot-pad:9px}
 #slot-grid::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 25%,transparent 72%,rgba(0,0,0,.35));z-index:4}
 .slot-cell{background:linear-gradient(180deg,#f8fafc,#cbd5e1);border:2px solid #fbbf24;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:30px;position:relative;transition:border-color .2s,filter .2s,transform .2s;color:#0f172a;box-shadow:inset 0 0 10px rgba(15,23,42,.28)}
 .slot-cell.reel-spinning{filter:blur(1.5px) saturate(1.35);animation:reelRush .14s linear infinite}
-.slot-cell.reel-stopped{animation:reelLand .28s cubic-bezier(.2,1.8,.4,1)}
+.slot-cell.reel-stopped{animation:reelLand .24s cubic-bezier(.18,.9,.32,1.25)}
+.slot-cell.near-match-flash{border-color:#fff7ad!important;box-shadow:0 0 16px #facc15,inset 0 0 9px #fff;filter:brightness(1.18);z-index:5}
+.slot-cell.reel-tension{animation:reelTension .09s ease-in-out infinite alternate;filter:blur(0) saturate(1.1)}
 .slot-cell.win{border-color:#fff7ad;background:linear-gradient(135deg,#fef3c7,#f59e0b);box-shadow:0 0 18px #facc15,inset 0 0 12px #fff;animation:winPulse .45s infinite alternate;z-index:5}
 .slot-cell.swap-target{border-color:#38bdf8;cursor:pointer}
 .slot-cell.locked::after{content:'🔒';position:absolute;top:2px;left:4px;font-size:10px}
 .slot-cell.lock-pick{cursor:crosshair;border-color:#f59e0b;background:rgba(245,158,11,.15)}
 @keyframes reelRush{0%{transform:translateY(-7px) scaleY(1.12)}50%{transform:translateY(7px) scaleY(.92)}100%{transform:translateY(-7px) scaleY(1.12)}}
-@keyframes reelLand{0%{transform:translateY(-18px) scaleY(1.16)}70%{transform:translateY(5px) scaleY(.9)}100%{transform:none}}
+@keyframes reelLand{0%{transform:translateY(0) scale(1)}42%{transform:translateY(3px) scale(1.05)}100%{transform:translateY(0) scale(1)}}
+@keyframes reelTension{from{transform:translateX(-1px)}to{transform:translateX(1px)}}
 @keyframes winPulse{from{transform:scale(1);filter:brightness(1)}to{transform:scale(1.08);filter:brightness(1.35)}}
 #slot-celebration{position:absolute;inset:0;z-index:12;pointer-events:none;overflow:hidden;border-radius:14px;display:none;align-items:center;justify-content:center}
 #slot-celebration.show{display:flex}
@@ -137,13 +141,13 @@ html,body{height:100%;overflow:hidden;background:#0f172a;font-family:"PingFang S
 .reward-fly{position:fixed;z-index:360;pointer-events:none;font-size:32px;filter:drop-shadow(0 0 8px #fbbf24)}
 @keyframes jackpotPop{0%{transform:scale(.15) rotate(-12deg);opacity:0}65%{transform:scale(1.22) rotate(3deg)}100%{transform:scale(1) rotate(-4deg);opacity:1}}
 @keyframes casinoBurst{0%{transform:translate(-50%,-50%) scale(.3) rotate(0);opacity:0}12%{opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.1) rotate(var(--rot));opacity:0}}
-@media (prefers-reduced-motion:reduce){.slot-cell.reel-spinning,.slot-cell.reel-stopped,.slot-cell.win,#slot-win-title,.slot-particle{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+@media (prefers-reduced-motion:reduce){.slot-cell.reel-spinning,.slot-cell.reel-stopped,.slot-cell.reel-tension,.slot-cell.near-match-flash,.slot-cell.win,#slot-win-title,.slot-particle{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 .slot-col-btn{position:absolute;top:-30px;width:64px;text-align:center}
 .col-nudge-btn{background:linear-gradient(180deg,#475569,#334155);color:#38bdf8;border:1px solid #64748b;border-radius:6px;padding:3px 0;font-size:14px;cursor:pointer;width:64px;display:block}
 .col-nudge-btn:hover:not(:disabled){background:linear-gradient(180deg,#38bdf8,#1e40af);color:#fff}
 .col-nudge-btn:disabled{opacity:.3;cursor:not-allowed}
 .col-nudge-btn .col-tag{display:block;font-size:8px;color:#94a3b8;margin-top:1px}
-#nudge-row{display:grid;grid-template-columns:repeat(3,64px);gap:6px;justify-content:center;margin:4px auto 2px}
+#nudge-row{display:grid;grid-template-columns:repeat(3,var(--slot-cell));gap:var(--slot-gap);justify-content:center;margin:4px 0 2px;padding:0 var(--slot-pad);box-sizing:border-box;width:230px;margin-left:41px;margin-right:auto;--slot-cell:64px;--slot-gap:6px;--slot-pad:9px}
 #ability-panel{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:8px 10px;margin-top:10px;font-size:11px;color:#94a3b8}
 #ability-panel b{color:#38bdf8;display:block;margin-bottom:4px}
 #ability-list{display:flex;flex-wrap:wrap;gap:4px}
@@ -153,10 +157,42 @@ html,body{height:100%;overflow:hidden;background:#0f172a;font-family:"PingFang S
 #ability-list .ab.dir-economy{border-color:#10b981;color:#34d399}
 #slot-hud{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
 #slot-hud .cost{color:#f59e0b}
-#slot-result-text{font-size:12px;color:#10b981;min-height:18px;text-align:center;margin:6px 0;font-weight:bold}
+#slot-result-text{font-size:12px;color:#10b981;height:32px;line-height:16px;display:flex;align-items:center;justify-content:center;text-align:center;margin:6px 0;font-weight:bold;overflow:hidden}
 #hidden-preview{display:flex;justify-content:center;gap:24px;font-size:16px;color:#64748b;min-height:20px;margin-bottom:4px}
-.slot-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.slot-actions{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:8px;min-height:34px}
 #prob-panel{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:8px;font-size:10px;color:#94a3b8;margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}
+/* C1 实体拉杆、真实减速与机柜灯光 */
+#modal-slot .slot-cabinet::before{transition:opacity .18s,filter .18s}
+#modal-slot .slot-cabinet.is-spinning::before{opacity:.62;animation:cabinetChase .46s steps(2,end) infinite}
+#modal-slot .slot-cabinet.win-lit{box-shadow:0 0 0 4px #7c2d12,0 0 30px rgba(250,204,21,.85),inset 0 0 34px rgba(250,204,21,.35)}
+#modal-slot .slot-cabinet.big-lit{box-shadow:0 0 0 4px #7c2d12,0 0 36px rgba(217,70,239,.9),inset 0 0 40px rgba(168,85,247,.42);animation:cabinetWin .48s ease-in-out infinite alternate}
+#modal-slot .slot-cabinet.mega-lit{box-shadow:0 0 0 4px #fbbf24,0 0 46px rgba(245,158,11,1),inset 0 0 46px rgba(236,72,153,.48);animation:cabinetWin .24s ease-in-out infinite alternate}
+#slot-stage{display:flex;align-items:center;justify-content:center;gap:14px;margin:10px auto 6px;--slot-cell:64px;--slot-gap:6px;--slot-pad:9px}
+#slot-stage #slot-grid{--slot-cell:64px;--slot-gap:6px;--slot-pad:9px;grid-template-columns:repeat(3,var(--slot-cell));grid-template-rows:repeat(3,var(--slot-cell));gap:var(--slot-gap);padding:var(--slot-pad);margin:0}
+.slot-cell.reel-braking{filter:blur(.35px) saturate(1.08);animation-duration:.23s}
+#slot-lever-wrap{width:74px;display:flex;flex-direction:column;align-items:center;gap:5px;flex:0 0 auto}
+#slot-lever{--lever-pull:0px;position:relative;width:74px;height:178px;border:1px solid #f59e0b;border-radius:36px;background:linear-gradient(90deg,#451a03,#111827 42%,#312e81 72%,#451a03);box-shadow:inset 0 0 18px #000,0 0 14px rgba(245,158,11,.35);cursor:pointer;touch-action:none;overflow:hidden}
+#slot-lever:focus-visible{outline:3px solid #38bdf8;outline-offset:3px}
+#slot-lever .lever-track{position:absolute;left:50%;top:25px;bottom:25px;width:14px;transform:translateX(-50%);border:2px solid #92400e;border-radius:10px;background:#09090b;box-shadow:inset 0 0 5px #000}
+#slot-lever .lever-arm{position:absolute;left:50%;bottom:28px;width:48px;height:116px;transform:translate(-50%,var(--lever-pull));transition:transform .16s cubic-bezier(.2,1.6,.4,1)}
+#slot-lever.is-pulling .lever-arm{transition:none}
+#slot-lever .lever-shaft{position:absolute;left:50%;bottom:0;width:7px;height:90px;transform:translateX(-50%);border-radius:4px;background:linear-gradient(90deg,#64748b,#f8fafc 45%,#475569);box-shadow:0 0 4px #000}
+#slot-lever .lever-knob{position:absolute;left:50%;top:0;width:42px;height:42px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle at 35% 28%,#fecaca 0 8%,#ef4444 35%,#991b1b 72%);border:3px solid #fca5a5;box-shadow:0 4px 0 #7f1d1d,0 0 14px rgba(239,68,68,.75)}
+#slot-lever .lever-base{position:absolute;left:11px;right:11px;bottom:12px;height:24px;border-radius:50%;background:linear-gradient(#fbbf24,#92400e);border:2px solid #fde68a;box-shadow:0 0 8px rgba(245,158,11,.6)}
+#slot-lever.is-triggered .lever-arm{transform:translate(-50%,52px);transition:transform .1s ease-in}
+#slot-lever.is-disabled{opacity:.48;filter:grayscale(.35);cursor:not-allowed}
+#slot-lever.is-rejected{animation:leverReject .28s ease-in-out}
+#slot-lever-label{font-size:10px;color:#fbbf24;text-align:center;line-height:1.2}
+#slot-cost-info{display:flex;flex-direction:column;align-items:center;gap:2px;margin:7px auto 2px;padding:8px 12px;max-width:300px;border:1px solid rgba(245,158,11,.6);border-radius:10px;background:rgba(15,23,42,.86);color:#fef3c7;text-align:center}
+#slot-cost-info strong{font-size:14px;color:#fbbf24}
+#slot-cost-info span{font-size:10px;color:#94a3b8}
+#slot-cost-info.insufficient{border-color:#ef4444;background:rgba(127,29,29,.3)}
+#slot-cost-info.insufficient strong{color:#fca5a5}
+#slot-cost-info.rolling strong{color:#38bdf8}
+@keyframes cabinetChase{0%{background-position:0 0;filter:drop-shadow(0 0 5px #f59e0b)}100%{background-position:11px 11px;filter:drop-shadow(0 0 9px #fbbf24)}}
+@keyframes cabinetWin{from{filter:brightness(1)}to{filter:brightness(1.22)}}
+@keyframes leverReject{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@media (prefers-reduced-motion:reduce){#modal-slot .slot-cabinet{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 /* 定向目标选择 */
 #target-row{display:flex;align-items:center;gap:8px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:6px 10px;margin-top:8px;font-size:12px;color:#94a3b8}
 #target-row b{color:#38bdf8}
@@ -241,9 +277,24 @@ html,body{height:100%;overflow:hidden;background:#0f172a;font-family:"PingFang S
   .res-item{min-width:46px;height:48px;font-size:20px}
   #action-row{gap:6px}
   #action-row .btn-sm{min-height:44px;padding:8px 14px}
+  #modal-slot .slot-cabinet{padding:14px 12px;max-height:calc(100dvh - max(18px,env(safe-area-inset-top,0px)) - max(18px,env(safe-area-inset-bottom,0px)))}
+  #modal-slot .slot-cabinet h3{font-size:18px;margin-bottom:8px}
   #modal-slot .modal-close{width:44px;height:44px;font-size:18px}
   #modal-slot .modal-close:disabled{opacity:.35;filter:grayscale(.6)}
-  #modal-slot .col-nudge-btn{min-height:44px}
+  #modal-slot .col-nudge-btn{width:52px;min-height:44px}
+  #modal-slot #nudge-row{grid-template-columns:repeat(3,52px);gap:4px;--slot-cell:52px;--slot-gap:4px;--slot-pad:7px;padding:0 7px;width:164px}
+  #slot-stage{gap:6px;margin:6px auto 4px;--slot-cell:52px;--slot-gap:4px;--slot-pad:7px}
+  #slot-stage #slot-grid{--slot-cell:52px;--slot-gap:4px;--slot-pad:7px;gap:4px;padding:7px}
+  #slot-stage .slot-cell{font-size:25px;border-radius:8px}
+  #slot-lever-wrap{width:56px}
+  #slot-lever{width:56px;height:160px;border-radius:28px}
+  #slot-lever .lever-arm{height:105px;width:44px}
+  #slot-lever .lever-shaft{height:80px}
+  #slot-lever .lever-knob{width:40px;height:40px}
+  #slot-lever.is-triggered .lever-arm{transform:translate(-50%,48px)}
+  #slot-cost-info{margin-top:5px;padding:7px 9px}
+  #slot-cost-info strong{font-size:13px}
+  .slot-actions{min-height:44px}
   #wave-progress{width:100%;padding:4px 0 8px;overflow:hidden}
   .wp-node{width:14px;height:14px;border-width:1px;font-size:7px}
   .wp-node .wp-num{display:none}
@@ -268,13 +319,13 @@ html,body{height:100%;overflow:hidden;background:#0f172a;font-family:"PingFang S
   <!-- 玩法说明屏 -->
   <div id="screen-help" class="screen">
     <h2>玩法说明</h2>
-    <div class="help-card"><b>🎯 目标</b>：转老虎机获得建筑，摆进 3×3 九宫格抵挡 9 波敌潮。击败第 9 波 Boss 即胜利；基地生命归零则失败。</div>
-    <div class="help-card"><b>💰 双货币</b>：<b>铜钱</b>只能转老虎机（每次消耗递增：10→20→40→80→160，每波重置）；<b>金币</b>在商店买技能或刷新老虎机投资选项。</div>
-    <div class="help-card"><b>🎰 老虎机</b>：3×3 滚轴 8 条线，三个相同图标连成一线即中奖，每条线独立发建筑。每波可<b>列下移</b> 1 次（选一列下移，新图标从顶部进入，可能组成新中奖线！）。连续 2 次未中奖触发保底。</div>
+    <div class="help-card"><b>🎯 目标</b>：转老虎机获得建筑，摆进 3×3 九宫格抵挡 18 个关卡节点。击败第 18 关终局 Boss 即胜利；基地生命归零则失败。</div>
+    <div class="help-card"><b>💰 双货币</b>：<b>铜钱</b>只能转老虎机（每波内消耗递增：6→12→22→45→90，每波重置）；<b>金币</b>在商店买技能或刷新老虎机投资选项。</div>
+    <div class="help-card"><b>🎰 老虎机</b>：点击或下拉实体拉杆开始抽取。3×3 滚轴共有 8 条线，三个相同图标连成一线即中奖，每条线独立发建筑；未中奖不会强制保底。每波可<b>列下移</b> 1 次（选一列下移，新图标从顶部进入，可能组成新中奖线！）。</div>
     <div class="help-card"><b>⬆️ 同类升星</b>：把同名建筑拖到一起，星级相加+1（上限5星）。星级越高伤害越高。</div>
     <div class="help-card"><b>🧬 异类合成</b>：短弓+火盆→重型火箭塔；水炮塔+静电线圈→雷暴降临塔。进入备战阶段若场上有可合成配方，点「🧬 合成」进入合成期，<b>拖动两种配方建筑到一起</b>即可合成。<b>不消耗材料</b>：参与合成的高阶建筑会自动"重置"为0星，并按其星级返还等量0星件（例：3星短弓+2星火盆→0星火箭塔 + 3个0星短弓 + 2个0星火盆），返还件可继续升星或二次合成。</div>
     <div class="help-card"><b>📐 位置策略</b>：建筑上下左右相邻会触发增益——火盆让相邻短弓火箭化×2、铁匠铺让相邻塔攻速+30%、魔力棱镜让相邻单体塔伤害+20%且多打1目标、储能水槽让相邻雷水流建筑伤害提升。摆对位置是关键！</div>
-    <div class="help-card"><b>Machine 升级</b>：第 2/4/6/8 波结束后可三选一强化老虎机本体（聚财/定向/爆发三方向），让抽取越来越强。</div>
+    <div class="help-card"><b>Machine 升级</b>：完成标记奖励的关卡节点后可三选一强化老虎机本体（当前为第 2/4/7/9/12/13 关，聚财/定向/爆发三方向），让抽取越来越强。</div>
     <div class="help-card"><b>❄️ 技能</b>：战斗中点击技能栏释放。技能在商店用金币购买，是阵容短板的救场手段。</div>
     <button class="btn btn-primary" id="btn-help-back" style="margin-top:8px">返回标题</button>
   </div>
@@ -326,19 +377,27 @@ html,body{height:100%;overflow:hidden;background:#0f172a;font-family:"PingFang S
 </div>
 
 <!-- 老虎机弹窗 -->
-<div class="modal" id="modal-slot">
+<div class="modal" id="modal-slot" role="dialog" aria-modal="true" aria-labelledby="slot-title">
   <div class="modal-box slot-cabinet">
     <div id="slot-celebration" aria-live="polite"><div id="slot-win-title"></div></div>
-    <button class="modal-close" id="slot-close">✕</button>
-    <h3>🎰 幸运老虎机</h3>
-    <div id="slot-hud"><span>💰 <b id="slot-copper">40</b></span><span class="cost" id="slot-cost">下次消耗 10</span></div>
+    <button class="modal-close" id="slot-close" aria-label="关闭老虎机">✕</button>
+    <h3 id="slot-title">🎰 幸运老虎机</h3>
+    <div id="slot-hud"><span>💰 <b id="slot-copper">40</b></span><span class="cost" id="slot-cost">本波第 1 次</span></div>
     <div id="hidden-preview"></div>
     <div id="nudge-row"><button class="col-nudge-btn" id="nudge-0">⬇️<span class="col-tag">Ⅰ列</span></button><button class="col-nudge-btn" id="nudge-1">⬇️<span class="col-tag">Ⅱ列</span></button><button class="col-nudge-btn" id="nudge-2">⬇️<span class="col-tag">Ⅲ列</span></button></div>
     <div id="lock-row" style="display:none"><button id="btn-lock-mode" class="btn btn-secondary btn-sm">🔒 进入锁定模式</button><span id="lock-hint" style="font-size:11px;color:#94a3b8;margin-left:8px">点击九宫格某个格子锁定，下次抽取该格保留（每波仅可使用 1 次）</span><span id="lock-status" style="font-size:11px;color:#f59e0b;margin-left:8px"></span></div>
-    <div id="slot-grid"></div>
-    <div id="slot-result-text">祝你好运！</div>
+    <div id="slot-stage">
+      <div id="slot-grid"></div>
+      <div id="slot-lever-wrap">
+        <button type="button" id="slot-lever" aria-label="点击或向下拖动拉杆开始抽取" aria-describedby="slot-cost-info">
+          <span class="lever-track"></span><span class="lever-arm"><span class="lever-shaft"></span><span class="lever-knob"></span></span><span class="lever-base"></span>
+        </button>
+        <span id="slot-lever-label">点击或下拉</span>
+      </div>
+    </div>
+    <div id="slot-result-text" aria-live="polite">祝你好运！</div>
+    <div id="slot-cost-info" role="status"><strong id="slot-cost-main">本次拉杆消耗 10 铜钱</strong><span id="slot-cost-hint">点击或下拉右侧拉杆</span></div>
     <div class="slot-actions">
-      <button class="btn btn-primary btn-sm" id="btn-spin">消耗 10 铜钱抽卡</button>
       <button class="btn btn-secondary btn-sm" id="btn-swap-center" style="display:none">🔄 中心交换</button>
       <button class="btn btn-secondary btn-sm" id="btn-done-spin" style="display:none">完成</button>
     </div>
@@ -349,10 +408,10 @@ html,body{height:100%;overflow:hidden;background:#0f172a;font-family:"PingFang S
 </div>
 
 <!-- 定向目标选择弹窗 -->
-<div class="modal" id="modal-target">
+<div class="modal" id="modal-target" role="dialog" aria-modal="true" aria-labelledby="target-title">
   <div class="modal-box">
-    <button class="modal-close" id="target-close">✕</button>
-    <h3>🎯 选择定向目标</h3>
+    <button class="modal-close" id="target-close" aria-label="关闭目标选择">✕</button>
+    <h3 id="target-title">🎯 选择定向目标</h3>
     <div id="target-hint" style="text-align:center;font-size:12px;color:#94a3b8;margin-bottom:4px"></div>
     <div id="target-grid"></div>
     <div style="text-align:center;margin-top:8px"><button class="btn btn-primary btn-sm" id="btn-target-confirm">确认</button></div>
@@ -900,40 +959,82 @@ return[0,1,2].map(()=>[0,1,2,3].map(()=>weightedSymbol(w)));
 function reelCell(i){const col=i%3,row=Math.floor(i/3);return G.reels[col][row];}
 
 /* ================= 老虎机：抽取流程 ================= */
-const slotSpin={active:false,phase:'idle',timeouts:[],intervals:[]};
+const slotSpin={active:false,phase:'idle',timeouts:[],raf:null,cost:0};
+const slotAudio={ctx:null,roll:null,tones:new Set()};
+const leverInput={pointerId:null,startX:0,startY:0,pull:0,suppressClickUntil:0};
+let slotDialogReturnFocus=null,targetDialogReturnFocus=null;
 window.__slotSpinActive=false;
 function prefersReducedMotion(){return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);}
 function slotTimeout(fn,delay){const id=setTimeout(fn,delay);slotSpin.timeouts.push(id);return id;}
-function clearSlotSpinTimers(){slotSpin.timeouts.forEach(clearTimeout);slotSpin.intervals.forEach(clearInterval);slotSpin.timeouts=[];slotSpin.intervals=[];}
+function stopSlotRollSound(){
+const roll=slotAudio.roll;if(!roll)return;slotAudio.roll=null;
+try{roll.gain.gain.cancelScheduledValues(roll.ctx.currentTime);roll.gain.gain.setValueAtTime(0,roll.ctx.currentTime);roll.osc.onended=null;roll.osc.stop();}catch(e){}
+try{roll.osc.disconnect();roll.filter.disconnect();roll.gain.disconnect();}catch(e){}
+}
+function cleanupSlotTones(){
+slotAudio.tones.forEach(t=>{try{t.osc.onended=null;t.osc.stop();}catch(e){}try{t.osc.disconnect();t.gain.disconnect();}catch(e){}});slotAudio.tones.clear();
+}
+function clearSlotSpinTimers(){
+slotSpin.timeouts.forEach(clearTimeout);slotSpin.timeouts=[];
+if(slotSpin.raf!==null){cancelAnimationFrame(slotSpin.raf);slotSpin.raf=null;}
+stopSlotRollSound();
+}
+function getSlotAudioContext(){
+try{
+const AudioCtor=window.AudioContext||window.webkitAudioContext;if(!AudioCtor)return null;
+if(!slotAudio.ctx)slotAudio.ctx=new AudioCtor();
+if(slotAudio.ctx.state!=='running'){const resumed=slotAudio.ctx.resume();if(resumed&&resumed.catch)resumed.catch(()=>{});}
+return slotAudio.ctx;
+}catch(e){return null;}
+}
+function playSlotTone(kind,index){
+const ctx=getSlotAudioContext();if(!ctx)return;
+const profiles={lever:[[170,85,.14,'sine']],stop:[[920+(index||0)*35,180,.055,'square'],[1480,260,.028,'sawtooth']],win:[[392,523,.16,'triangle'],[523,659,.18,'triangle']],big:[[392,659,.2,'triangle'],[523,784,.24,'triangle'],[659,988,.28,'triangle']],mega:[[392,784,.22,'sawtooth'],[523,1046,.3,'triangle'],[659,1318,.36,'triangle']]};
+const notes=profiles[kind]||[];const base=ctx.currentTime;
+notes.forEach((note,i)=>{
+try{const osc=ctx.createOscillator(),gain=ctx.createGain(),tone={osc,gain};osc.type=note[3];osc.frequency.setValueAtTime(note[0],base+i*.07);osc.frequency.exponentialRampToValueAtTime(note[1],base+i*.07+note[2]);gain.gain.setValueAtTime(.0001,base+i*.07);gain.gain.exponentialRampToValueAtTime(kind==='stop'?.055:.035,base+i*.07+.012);gain.gain.exponentialRampToValueAtTime(.0001,base+i*.07+note[2]);osc.connect(gain);gain.connect(ctx.destination);slotAudio.tones.add(tone);osc.onended=()=>{slotAudio.tones.delete(tone);try{osc.disconnect();gain.disconnect();}catch(e){}};osc.start(base+i*.07);osc.stop(base+i*.07+note[2]+.02);}catch(e){}
+});
+}
+function startSlotRollSound(){
+const ctx=getSlotAudioContext();if(!ctx||slotAudio.roll)return;
+try{const osc=ctx.createOscillator(),gain=ctx.createGain(),filter=ctx.createBiquadFilter(),now=ctx.currentTime;osc.type='sawtooth';osc.frequency.setValueAtTime(82,now);osc.frequency.linearRampToValueAtTime(54,now+5.95);filter.type='lowpass';filter.frequency.value=420;gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.018,now+.04);osc.connect(filter);filter.connect(gain);gain.connect(ctx.destination);osc.start(now);slotAudio.roll={ctx,osc,filter,gain};}catch(e){slotAudio.roll=null;}
+}
 function setSlotSpinActive(active){
 slotSpin.active=active;window.__slotSpinActive=active;
 $('slot-close').disabled=active;
-$('btn-spin').setAttribute('aria-busy',active?'true':'false');
+const lever=$('slot-lever');lever.disabled=active;lever.setAttribute('aria-busy',active?'true':'false');
 updateSpinCostUI();updateNudgeBtns();showAdjustUI();renderLockRow();
 }
 function clearSlotFx(){
-$('slot-grid').classList.remove('slot-big-win','slot-mega-win');
-document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>{c.classList.remove('reel-spinning','reel-stopped','reel-stop-0','reel-stop-1','reel-stop-2','win');});
+const cabinet=document.querySelector('#modal-slot .slot-cabinet');
+cabinet.classList.remove('is-spinning','reels-stopped-1','reels-stopped-2','reels-stopped-3','win-lit','big-lit','mega-lit');
+document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>{c.classList.remove('reel-spinning','reel-braking','reel-stopped','reel-stop-0','reel-stop-1','reel-stop-2','reel-tension','near-match-flash','win');c.style.removeProperty('animation-duration');c.style.removeProperty('animation-timing-function');});
 const fx=$('slot-celebration');fx.className='';fx.classList.remove('show');fx.querySelectorAll('.slot-particle').forEach(p=>p.remove());$('slot-win-title').textContent='';
 }
 function openSlot(){
-clearSlotFx();$('modal-slot').classList.add('active');
+if(G.phase!=='prep')return;
+clearSlotFx();resetLeverGesture();slotDialogReturnFocus=document.activeElement;$('modal-slot').classList.add('active');
+const app=$('app');app.inert=true;app.setAttribute('aria-hidden','true');
 $('slot-copper').textContent=G.copper;updateSpinCostUI();renderProbPanel();renderHiddenPreview();renderAbilityList();renderTargetRow();renderLockRow();
 if(!G.reels){G.reels=generateReels();renderSlotGrid();}
-updateNudgeBtns();showAdjustUI();
+updateNudgeBtns();showAdjustUI();requestAnimationFrame(()=>$('slot-lever').focus());
 }
 function closeSlot(){
 if(slotSpin.active){toast('转轴正在转动，请等待停轮');return;}
-$('modal-slot').classList.remove('active');
+resetLeverGesture();$('modal-slot').classList.remove('active');
+const app=$('app');app.inert=false;app.removeAttribute('aria-hidden');
 G.adjustMode=false;G.swapMode=false;G.lockMode=false;
 document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.remove('swap-target','lock-pick'));
 /* 保留当前盘面与已结算中奖线，避免关闭重开获得免费新盘面或绕过中奖限制；每波开始时统一重置。 */
-clearSlotFx();
+clearSlotFx();if(slotDialogReturnFocus&&slotDialogReturnFocus.focus)slotDialogReturnFocus.focus();slotDialogReturnFocus=null;
 }
 function updateSpinCostUI(){
-const cost=spinCost();$('slot-cost').textContent='下次消耗 '+cost;
-$('btn-spin').textContent=slotSpin.active?'转轴转动中…':'消耗 '+cost+' 铜钱抽卡';
-$('btn-spin').disabled=slotSpin.active||G.copper<cost;
+const cost=spinCost(),insufficient=G.copper<cost,info=$('slot-cost-info'),lever=$('slot-lever');
+$('slot-cost').textContent=slotSpin.active?(slotSpin.cost===0?'本次免费':'本次已消耗 '+slotSpin.cost):'本波第 '+(G.spinCount+1)+' 次';
+$('slot-cost-main').textContent=slotSpin.active?'转轴转动中…':(cost===0?'本次拉杆免费':'本次拉杆消耗 '+cost+' 铜钱');
+$('slot-cost-hint').textContent=slotSpin.active?'正在依次停轮，请稍候':insufficient?'铜钱不足，下一波费用重置':'点击或下拉右侧拉杆';
+info.classList.toggle('rolling',slotSpin.active);info.classList.toggle('insufficient',!slotSpin.active&&insufficient);
+lever.classList.toggle('is-disabled',slotSpin.active||insufficient);lever.setAttribute('aria-disabled',slotSpin.active?'true':'false');lever.setAttribute('aria-invalid',insufficient?'true':'false');
 }
 function spinCost(){
 const idx=Math.min(G.spinCount,SPIN_COSTS.length-1);
@@ -942,11 +1043,57 @@ if(hasAb('E2')&&G.spinTotal>0&&(G.spinTotal+1)%4===0)c=0;
 return c;
 }
 function hasAb(id){return G.ownedAbilities.includes(id);}
+function rejectLever(){
+const lever=$('slot-lever');lever.classList.remove('is-rejected');void lever.offsetWidth;lever.classList.add('is-rejected');setTimeout(()=>lever.classList.remove('is-rejected'),320);
+$('slot-result-text').textContent='铜钱不足，无法拉动老虎机';toast('铜钱不足！本波消耗已递增，下一波重置');updateSpinCostUI();
+}
+function animateLeverTrigger(){
+const lever=$('slot-lever');lever.style.removeProperty('--lever-pull');lever.classList.remove('is-pulling');lever.classList.add('is-triggered');setTimeout(()=>lever.classList.remove('is-triggered'),260);
+}
+function requestSlotSpin(){
+if(slotSpin.active||G.phase!=='prep'||!$('modal-slot').classList.contains('active'))return false;
+getSlotAudioContext();
+if(G.copper<spinCost()){rejectLever();return false;}
+animateLeverTrigger();playSlotTone('lever',0);doSpin();return true;
+}
+function resetLeverGesture(){
+const lever=$('slot-lever');if(!lever)return;
+leverInput.pointerId=null;leverInput.pull=0;lever.classList.remove('is-pulling');lever.style.setProperty('--lever-pull','0px');
+}
+function initSlotLever(){
+const lever=$('slot-lever');
+lever.addEventListener('pointerdown',e=>{
+if(e.button!==undefined&&e.button!==0)return;if(slotSpin.active)return;
+leverInput.pointerId=e.pointerId;leverInput.startX=e.clientX;leverInput.startY=e.clientY;leverInput.pull=0;lever.classList.add('is-pulling');
+try{lever.setPointerCapture(e.pointerId);}catch(err){}e.preventDefault();
+});
+lever.addEventListener('pointermove',e=>{
+if(e.pointerId!==leverInput.pointerId)return;
+const dx=e.clientX-leverInput.startX,dy=e.clientY-leverInput.startY;const vertical=Math.abs(dy)>=Math.abs(dx)*.8;leverInput.pull=vertical?Math.max(0,Math.min(52,dy)):0;lever.style.setProperty('--lever-pull',leverInput.pull+'px');e.preventDefault();
+});
+lever.addEventListener('pointerup',e=>{
+if(e.pointerId!==leverInput.pointerId)return;
+const dx=Math.abs(e.clientX-leverInput.startX),dy=e.clientY-leverInput.startY,pull=leverInput.pull;leverInput.suppressClickUntil=performance.now()+400;
+try{lever.releasePointerCapture(e.pointerId);}catch(err){}resetLeverGesture();
+if(pull>=38&&dy>dx)requestSlotSpin();else if(Math.abs(dy)<=14&&dx<=14)requestSlotSpin();
+e.preventDefault();
+});
+lever.addEventListener('pointercancel',resetLeverGesture);lever.addEventListener('lostpointercapture',resetLeverGesture);
+lever.addEventListener('click',e=>{if(performance.now()<leverInput.suppressClickUntil)return;e.preventDefault();requestSlotSpin();});
+$('modal-slot').addEventListener('keydown',e=>{
+if(!$('modal-slot').classList.contains('active')||$('modal-target').classList.contains('active'))return;
+if(e.key==='Escape'){e.preventDefault();closeSlot();return;}
+if(e.key!=='Tab')return;
+const focusable=[...$('modal-slot').querySelectorAll('button:not(:disabled),[tabindex]:not([tabindex="-1"])')].filter(el=>el.offsetParent!==null);if(!focusable.length)return;
+const first=focusable[0],last=focusable[focusable.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+});
+window.addEventListener('blur',resetLeverGesture);
+}
 function doSpin(){
 if(slotSpin.active)return;
 const cost=spinCost();
-if(G.copper<cost){toast('铜钱不足！本波消耗已递增，下一波重置');return;}
-clearSlotSpinTimers();clearSlotFx();slotSpin.phase='rolling';setSlotSpinActive(true);
+if(G.copper<cost){rejectLever();return;}
+clearSlotSpinTimers();clearSlotFx();slotSpin.phase='rolling';slotSpin.cost=cost;setSlotSpinActive(true);
 G.copper-=cost;G.spinCount++;G.spinTotal++;
 $('slot-copper').textContent=G.copper;$('slot-result-text').textContent='🎰 转轴启动！';
 G.adjustMode=false;G.swapMode=false;G.lockMode=false;
@@ -962,23 +1109,45 @@ G.lockedCell=-1;
 startReelSpin(weights);
 }
 function startReelSpin(weights){
-const reduced=prefersReducedMotion();const stopAt=reduced?[80,130,180]:[650,950,1250];
-for(let col=0;col<3;col++){
-const colCells=[col,col+3,col+6].map(i=>cells(i));
-colCells.forEach(c=>c.classList.add('reel-spinning'));
-const iv=reduced?null:setInterval(()=>{colCells.forEach(c=>c.textContent=BUILDINGS[weightedSymbol(weights)].icon);},55+col*8);
-if(iv)slotSpin.intervals.push(iv);
-slotTimeout(()=>{
-if(iv){clearInterval(iv);slotSpin.intervals=slotSpin.intervals.filter(x=>x!==iv);}
-colCells.forEach((c,row)=>{c.textContent=BUILDINGS[G.reels[col][row]].icon;c.classList.remove('reel-spinning');c.classList.add('reel-stopped','reel-stop-'+col);});
-if(col===2)slotTimeout(()=>finishSpin(false),reduced?20:170);
-},stopAt[col]);
+const reduced=prefersReducedMotion(),timing=reduced?{firstBrake:60,gaps:[0,20,20],firstTwo:[20,20,20],normalThird:[20,20,20],tensionThird:[20,20,20]}:{firstBrake:900,gaps:[0,400,1000],firstTwo:[120,200,80],normalThird:[300,300,300],tensionThird:[300,300,650]},started=performance.now();
+const cabinet=document.querySelector('#modal-slot .slot-cabinet'),states=[0,1,2].map((_,col)=>({next:started,brakeAt:col===0?started+timing.firstBrake:Infinity,stopped:false,braking:false,step:0,intervals:null}));let nearRows=[];
+cabinet.classList.add('is-spinning');document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.add('reel-spinning'));startSlotRollSound();
+function columnCells(col){return [col,col+3,col+6].map(i=>cells(i));}
+function drawPassingSymbols(col){columnCells(col).forEach(c=>c.textContent=BUILDINGS[weightedSymbol(weights)].icon);}
+function beginBrake(col,now){
+const state=states[col];state.braking=true;state.intervals=col===2?(nearRows.length?timing.tensionThird:timing.normalThird):timing.firstTwo.slice();state.step=0;drawPassingSymbols(col);
+const colCells=columnCells(col);colCells.forEach(c=>{c.classList.add('reel-braking');c.style.animationTimingFunction='ease-out';c.style.animationDuration=state.intervals[0]+'ms';});state.next=now+state.intervals[0];
 }
+function flashNearMatch(){
+nearRows=[];for(let row=0;row<3;row++)if(G.reels[0][row]===G.reels[1][row])nearRows.push(row);
+nearRows.forEach(row=>[cells(row*3),cells(row*3+1)].forEach(c=>{c.classList.remove('near-match-flash');void c.offsetWidth;c.classList.add('near-match-flash');}));
+if(nearRows.length)slotTimeout(()=>document.querySelectorAll('.near-match-flash').forEach(c=>c.classList.remove('near-match-flash')),480);
+}
+function stopColumn(col,now){
+const colCells=columnCells(col);states[col].stopped=true;
+colCells.forEach((c,row)=>{c.textContent=BUILDINGS[G.reels[col][row]].icon;c.classList.remove('reel-spinning','reel-braking','reel-tension');c.style.removeProperty('animation-duration');c.style.removeProperty('animation-timing-function');c.classList.add('reel-stopped');});
+cabinet.classList.remove('reels-stopped-1','reels-stopped-2','reels-stopped-3');cabinet.classList.add('reels-stopped-'+(col+1));playSlotTone('stop',col);
+if(col===1)flashNearMatch();
+if(col<2)states[col+1].brakeAt=now+timing.gaps[col+1];
+if(col===2){cabinet.classList.remove('is-spinning');stopSlotRollSound();}
+}
+function frame(now){
+if(!slotSpin.active||slotSpin.phase!=='rolling')return;
+for(let col=0;col<3;col++){
+const state=states[col];if(state.stopped)continue;
+if(!state.braking&&now>=state.brakeAt)beginBrake(col,now);
+if(!state.braking){if(now>=state.next){drawPassingSymbols(col);state.next=now+48;}continue;}
+if(now>=state.next){state.step++;if(state.step>=state.intervals.length){stopColumn(col,now);continue;}drawPassingSymbols(col);const delay=state.intervals[state.step];state.next=now+delay;columnCells(col).forEach(c=>c.style.animationDuration=delay+'ms');if(col===2&&nearRows.length&&state.step===state.intervals.length-1)columnCells(col).forEach(c=>c.classList.add('reel-tension'));}
+}
+if(states.every(s=>s.stopped)){slotSpin.raf=null;slotTimeout(()=>finishSpin(false),reduced?20:170);return;}
+slotSpin.raf=requestAnimationFrame(frame);
+}
+slotSpin.raf=requestAnimationFrame(frame);
 }
 function finishSpin(skipFx){
 if(!slotSpin.active||slotSpin.phase!=='rolling')return;
 slotSpin.phase='settling';clearSlotSpinTimers();
-document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.remove('reel-spinning'));
+document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.remove('reel-spinning','reel-braking'));
 renderSlotGrid();G.linesWon=[];
 let awarded=0;
 for(const line of PAYLINES){
@@ -994,8 +1163,9 @@ function endSlotSpin(){
 clearSlotSpinTimers();slotSpin.phase='idle';
 const fx=$('slot-celebration');fx.classList.remove('show');fx.querySelectorAll('.slot-particle').forEach(p=>p.remove());
 document.querySelectorAll('.reward-fly').forEach(el=>{if(el.getAnimations)el.getAnimations().forEach(a=>a.cancel());el.remove();});
-document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.remove('reel-spinning','reel-stopped'));
-setSlotSpinActive(false);
+document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>{c.classList.remove('reel-spinning','reel-braking','reel-stopped','reel-tension','near-match-flash');c.style.removeProperty('animation-duration');c.style.removeProperty('animation-timing-function');});
+const cabinet=document.querySelector('#modal-slot .slot-cabinet');cabinet.classList.remove('is-spinning','reels-stopped-1','reels-stopped-2','reels-stopped-3','win-lit','big-lit','mega-lit');
+setSlotSpinActive(false);slotSpin.cost=0;
 }
 function createCasinoParticles(level){
 const fx=$('slot-celebration');const mobile=isMobileTouch();const count=prefersReducedMotion()?0:(mobile?(level==='mega'?48:32):(level==='mega'?88:56));
@@ -1019,7 +1189,8 @@ anim.onfinish=anim.oncancel=()=>el.remove();
 function playSlotWinSequence(awarded){
 slotSpin.phase='celebrating';const reduced=prefersReducedMotion();
 const level=awarded>=4?'mega':awarded>=2?'big':'win';const title=awarded>=4?'MEGA WIN ×'+awarded:awarded>=2?'BIG WIN ×'+awarded:'WIN!';
-const fx=$('slot-celebration');fx.className='show '+level;$('slot-win-title').textContent=title;createCasinoParticles(level);
+const cabinet=document.querySelector('#modal-slot .slot-cabinet');cabinet.classList.remove('win-lit','big-lit','mega-lit');cabinet.classList.add(level==='mega'?'mega-lit':level==='big'?'big-lit':'win-lit');
+const fx=$('slot-celebration');fx.className='show '+level;$('slot-win-title').textContent=title;createCasinoParticles(level);playSlotTone(level,0);
 document.querySelectorAll('#slot-grid .slot-cell').forEach(c=>c.classList.remove('win'));
 G.linesWon.forEach((line,idx)=>slotTimeout(()=>{line.forEach(i=>cells(i).classList.add('win'));flySlotReward(line);},reduced?0:idx*140));
 slotTimeout(endSlotSpin,reduced?60:650+Math.min(G.linesWon.length,5)*140);
@@ -1157,10 +1328,10 @@ updateNudgeBtns();
 }
 function renderLockRow(){
 const row=$('lock-row');
-/* 无 D3 或本波已用过 → 整行隐藏，避免误导 */
-const canLock=hasAb('D3')&&!G.lockUsed&&!slotSpin.active;
-row.style.display=canLock?'flex':'none';
-if(!canLock)return;
+/* 有 D3 且本波未使用时保留固定布局槽位；旋转期间只隐藏内容，不改变机柜高度。 */
+const available=hasAb('D3')&&!G.lockUsed;row.style.display=available?'flex':'none';
+if(!available)return;row.style.visibility=slotSpin.active?'hidden':'visible';row.setAttribute('aria-hidden',slotSpin.active?'true':'false');
+if(slotSpin.active)return;
 if(!G.lockMode){$('btn-lock-mode').style.display='';$('lock-status').textContent='';}
 else{$('btn-lock-mode').style.display='none';$('lock-status').textContent='请点击一个格子';}
 $('lock-hint').style.display=G.lockMode?'none':'';
@@ -1170,9 +1341,9 @@ const locked=slotSpin.active||G.spinCount<=0;
 for(let col=0;col<3;col++){const b=$('nudge-'+col);if(b)b.disabled=locked||G.nudgeUsed>=G.nudgeMax||!G.reels||G.reels[0][0]==='❓';}
 }
 function showAdjustUI(){
-const locked=slotSpin.active||G.spinCount<=0;
-$('btn-done-spin').style.display=locked?'none':'';
-$('btn-swap-center').style.display=(!locked&&hasAb('D2')&&!G.swapUsed&&G.linesWon.length===0)?'':'none';
+const locked=slotSpin.active||G.spinCount<=0,done=$('btn-done-spin'),swap=$('btn-swap-center');
+done.style.display='';done.style.visibility=locked?'hidden':'visible';done.disabled=locked;
+const hasSwap=hasAb('D2')&&!G.swapUsed;swap.style.display=hasSwap?'':'none';swap.style.visibility=(!locked&&hasSwap&&G.linesWon.length===0)?'visible':'hidden';swap.disabled=locked||G.linesWon.length>0;
 }
 function renderProbPanel(){
 const w=getCurrentWeights();let sum=0;for(const k in w)sum+=w[k];
@@ -1815,18 +1986,20 @@ else G.targetSymbols.forEach(t=>{if(BUILDINGS[t])icons.insertAdjacentHTML('befor
 }
 function openTargetPicker(){
 const max=targetMax();if(max===0)return;
+targetDialogReturnFocus=document.activeElement;const slotModal=$('modal-slot'),fromSlot=slotModal.classList.contains('active');
+if(fromSlot){slotModal.inert=true;slotModal.setAttribute('aria-hidden','true');}else{const app=$('app');app.inert=true;app.setAttribute('aria-hidden','true');}
 $('target-hint').textContent='选择 '+max+' 个建筑（再点可取消），每个选中建筑中奖概率各 +5%';
 const grid=$('target-grid');grid.innerHTML='';
 Object.keys(REEL_BASE).forEach(id=>{
 const b=BUILDINGS[id];
-const div=document.createElement('div');div.className='tg-cell';div.dataset.id=id;
+const div=document.createElement('div');div.className='tg-cell';div.dataset.id=id;div.tabIndex=0;div.setAttribute('role','checkbox');
 /* 数值：攻击力/攻速/射程；配方：作为材料的合成产物 */
 const meta=b.dmg?'<div class="tg-meta">'+b.dmg+'/'+b.cd/1000+'s/'+Math.round(b.range*100)+'%</div>':'';
 const recipe=RECIPES.find(r=>r.mats.includes(id));
 const recipeHtml=recipe?'<div class="tg-recipe '+(b.school==='fire'?'fire':'water')+'">→ '+BUILDINGS[recipe.product].icon+'</div>':'';
 div.innerHTML=b.icon+'<span class="tg-nm">'+b.name+'</span>'+meta+recipeHtml
 +'<div class="tg-tip" style="font-size:11px;color:#64748b;margin-top:2px;cursor:pointer" data-id="'+id+'">ℹ️ 查看详情</div>';
-if(G.targetSymbols.includes(id))div.classList.add('selected');
+if(G.targetSymbols.includes(id))div.classList.add('selected');div.setAttribute('aria-checked',div.classList.contains('selected')?'true':'false');
 div.addEventListener('click',e=>{
 /* 点击详情行展开tip */
 if(e.target.classList.contains('tg-tip')){toast(b.name+'：'+b.desc);return;}
@@ -1835,11 +2008,23 @@ else{
 if(G.targetSymbols.length>=max){toast('最多选择 '+max+' 个');return;}
 div.classList.add('selected');G.targetSymbols.push(id);
 }
-renderProbPanel();
+div.setAttribute('aria-checked',div.classList.contains('selected')?'true':'false');renderProbPanel();
 });
+div.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();div.click();}});
 grid.appendChild(div);
 });
-$('modal-target').classList.add('active');
+$('modal-target').classList.add('active');requestAnimationFrame(()=>{const first=grid.querySelector('.tg-cell');(first||$('btn-target-confirm')).focus();});
+}
+function closeTargetPicker(){
+const modal=$('modal-target');modal.classList.remove('active');
+const slotModal=$('modal-slot');if(slotModal.classList.contains('active')){slotModal.inert=false;slotModal.removeAttribute('aria-hidden');}else{const app=$('app');app.inert=false;app.removeAttribute('aria-hidden');}
+renderTargetRow();renderProbPanel();if(targetDialogReturnFocus&&targetDialogReturnFocus.focus)targetDialogReturnFocus.focus();targetDialogReturnFocus=null;
+}
+function trapTargetDialog(e){
+if(!$('modal-target').classList.contains('active'))return;
+if(e.key==='Escape'){e.preventDefault();closeTargetPicker();return;}if(e.key!=='Tab')return;
+const focusable=[...$('modal-target').querySelectorAll('button:not(:disabled),[tabindex]:not([tabindex="-1"])')].filter(el=>el.offsetParent!==null);if(!focusable.length)return;
+const first=focusable[0],last=focusable[focusable.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
 }
 
 /* ================= 终局 ================= */
@@ -1869,15 +2054,16 @@ $('btn-help-back').addEventListener('click',()=>showScreen('title'));
 $('btn-restart').addEventListener('click',()=>{G=newGame();clearBattlefield();showScreen('game');startWave();showMobileSlotGuide();lastTime=performance.now();if(rAF)cancelAnimationFrame(rAF);rAF=requestAnimationFrame(gameLoop);});
 $('btn-slot').addEventListener('click',()=>{dismissMobileSlotGuide();openSlot();});
 $('slot-close').addEventListener('click',closeSlot);
-$('btn-spin').addEventListener('click',doSpin);
+initSlotLever();
 $('btn-done-spin').addEventListener('click',()=>{closeSlot();});
 $('btn-swap-center').addEventListener('click',toggleSwapMode);
 $('btn-lock-mode').addEventListener('click',toggleLockMode);
 $('btn-target').addEventListener('click',openTargetPicker);
-document.addEventListener('visibilitychange',()=>{if(document.hidden)forceSettleSlotSpin();});
-window.addEventListener('pagehide',forceSettleSlotSpin);
-$('btn-target-confirm').addEventListener('click',()=>{$('modal-target').classList.remove('active');renderTargetRow();renderProbPanel();});
-$('target-close').addEventListener('click',()=>{$('modal-target').classList.remove('active');});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){forceSettleSlotSpin();cleanupSlotTones();}});
+window.addEventListener('pagehide',()=>{forceSettleSlotSpin();cleanupSlotTones();});
+$('modal-target').addEventListener('keydown',trapTargetDialog);
+$('btn-target-confirm').addEventListener('click',closeTargetPicker);
+$('target-close').addEventListener('click',closeTargetPicker);
 $('btn-shop').addEventListener('click',openShop);
 $('shop-close').addEventListener('click',()=>{$('modal-shop').classList.remove('active');G.shopOffers=[];});
 $('btn-shop-refresh').addEventListener('click',()=>{
